@@ -1,0 +1,18 @@
+Package: PETabc
+Title: Bayesian Analysis for Kinetic Models
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Clara",
+           family = "Grazian",
+           role = c("aut", "cre"),
+           email = "c.grazian@unsw.edu.au",
+           comment = c(ORCID = "0000-0002-4967-7720"))
+Description: This package performs simulation and Bayesian analysis of kinetic models, in particular of single-tissue and two-tissue compartment models. The Bayesian analysis is performed through rejection ABC, with summary statistics obtained through smooth splines. 
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+Imports: 
+        deSolve (>= 1.28),
+        pracma (>= 2.2.9),
+        abc (>= 2.1)
+RoxygenNote: 7.1.0.9000
