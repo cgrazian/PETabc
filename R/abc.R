@@ -14,14 +14,18 @@
 #' @param b3 Maximum of the uniform prior for K3. Default to 0.1 .
 #' @param a4 Minimum of the uniform prior for K4. Default to 0 .
 #' @param b4 Maximum of the uniform prior for K4. Default to 0.2 .
-#' @param tol Tolerance level of the abc function.
+#' @param tol Tolerance level of the ABC function. This is the required proportion
+#' of points accepted nearest to the target values. Default at 0.05.
+#' @param method Parameter of the ABC algorithm: a character string indicating
+#' the type of ABC algorithm to be applied. Possible values are "rejection",
+#' "loclinear", "neuealnet", and "ridge". Default "regression".
 #' @return ABCres_single an object of class abc for the single-tissue compartment model.
 #' @return ABCres_two an object of class abc for the two-tissue compartment model.
 #' @keywords PETabc
 #' @export
 PETabc <- function(y,t,N=100000, inputfunction.=inputfunction, type=2,
                    a1=0,b1=0.2,a2=0.3,b2=0.5,a3=0,b3=0.1,a4=0,b4=0.2,
-                   tol)
+                   tol=0.05,method="rejection")
 {
   # y: vector of measured radioactivity concentrations in a voxel for each time-point. This can be in terms of observations or directly in terms of voxel time activity curve.
   # t: vector of time points of observations
@@ -127,10 +131,11 @@ PETabc <- function(y,t,N=100000, inputfunction.=inputfunction, type=2,
 #          file="Smat2S.out", append=T)
 
   }
+
   out1=abc(target=Sobs, param=parMat1, sumstat=Smat1, tol=tol,
-           method="neuralnet")
+           method=method)
   out2=abc(target=Sobs, param=parMat2, sumstat=Smat2, tol=tol,
-           method="neuralnet")
+           method=method)
   #  adj=out$adj.values
   #  unadj=out$unadj.values
 
