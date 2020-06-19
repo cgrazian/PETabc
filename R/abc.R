@@ -14,17 +14,13 @@
 #' @param b3 Maximum of the uniform prior for K3. Default to 0.1 .
 #' @param a4 Minimum of the uniform prior for K4. Default to 0 .
 #' @param b4 Maximum of the uniform prior for K4. Default to 0.2 .
-#' @param method Parameter of the ABC algorithm: a character string indicating
-#' the type of ABC algorithm to be applied. Possible values are "rejection",
-#' "loclinear", "neuealnet", and "ridge". Default "regression".
 #' @param PLOT If plots have to be produced. Default at FALSE.
 #' @return ABCres_single an object of class abc for the single-tissue compartment model.
 #' @return ABCres_two an object of class abc for the two-tissue compartment model.
 #' @keywords PETabc
 #' @export
 PETabc <- function(y,tspan,N=100000, inputfunction.=inputfunction, type=2,
-                   a1=0,b1=0.2,a2=0.3,b2=0.5,a3=0,b3=0.1,a4=0,b4=0.2,
-                   method="rejection", PLOT=F)
+                   a1=0,b1=0.2,a2=0.3,b2=0.5,a3=0,b3=0.1,a4=0,b4=0.2, PLOT=F)
 {
   # y: vector of measured radioactivity concentrations in a voxel for each time-point. This can be in terms of observations or directly in terms of voxel time activity curve.
   # t: vector of time points of observations
@@ -137,13 +133,11 @@ PETabc <- function(y,tspan,N=100000, inputfunction.=inputfunction, type=2,
   h1=apply(error1, 2, quantile, probs=0.05)
   h2=apply(error2, 2, quantile, probs=0.05)
 
+  out1=parMat1[(error1[,1]<h1[1])==1,]
+  out2=parMat2[(error2[,1]<h2[1])==1,]
+
   parM1=apply(parMat1[(error1[,1]<h1[1])==1,], 2, mean)
   parM2=apply(parMat2[(error2[,1]<h2[1])==1,], 2, mean)
-
-  out1=abc(target=Sobs, param=parMat1, sumstat=Smat1, tol=h1,
-             method=method)
-  out2=abc(target=Sobs, param=parMat2, sumstat=Smat2, tol=h2,
-              method=method)
 
   hgrid=seq(0.05, 0.4, length=10)
   RMSE1=RMSE2=matrix(NA, nrow=1, ncol=length(hgrid))
@@ -165,6 +159,33 @@ PETabc <- function(y,tspan,N=100000, inputfunction.=inputfunction, type=2,
   prob=mprob1/(mprob1+mprob2)
 
   if(PLOT==T){
+
+    pdf("posteriors_singletissue.pdf")
+      par(mfrow=c(1,2))
+      plot(density(out1[,1]),main="K1",
+           xlab="K1")
+      abline(v=mean(out1[,1]))
+      plot(density(out1[,2]),main="k2",
+           xlab="k2")
+      abline(v=mean(out1[,2]))
+    dev.off()
+
+    pdf("posteriors_twotissue.pdf")
+    par(mfrow=c(2,2))
+    plot(density(out2[,1]),main="K1",
+         xlab="K1")
+    abline(v=mean(out2[,1]))
+    plot(density(out2[,2]),main="k2",
+         xlab="k2")
+    abline(v=mean(out2[,2]))
+    plot(density(out2[,3]),main="k3",
+         xlab="K1")
+    abline(v=mean(out2[,3]))
+    plot(density(out2[,4]),main="k4",
+         xlab="K1")
+    abline(v=mean(out2[,4]))
+    dev.off()
+
     pdf("modelprob_TAC.pdf")
       par(mfrow=c(1,1))
       plot(y, type="p", lwd=3, xlab="time", ylab="Observations",
@@ -228,17 +249,10 @@ PETabc <- function(y,tspan,N=100000, inputfunction.=inputfunction, type=2,
   write(t(error1), file="error1.out", ncol=3)
   write(t(error2), file="error2.out", ncol=3)
 
-  if(method == "rejection"){
-    return(list(ABCres_single=list(ABCout=parMat1,Smat=Smat1,error=error1,tol=h1,
-                                   ABCout_unadj=out1$unadj.values,method=method),
-                ABCres_two=list(ABCout=parMat1,Smat=Smat1,error=error1,tol=h2,
-                                ABCout_unadj=out2$unadj.values,method=method) ) )
-  } else {
-    return(list(ABCres_single=list(ABCout=parMat1,Smat=Smat1,error=error1,tol=h1,
-                                   ABCout_adj=out1$adj.values,method=method),
-                ABCres_two=list(ABCout=parMat1,Smat=Smat1,error=error1,tol=h2,
-                                  ABCout_adj=out2$adj.values,method=method) ) )
-  }
+  return(list(ABCres_single=list(ABCout=parMat1,Smat=Smat1,error=error1,tol=h1,
+                                 ABCout_accepted=out1),
+              ABCres_two=list(ABCout=parMat2,Smat=Smat2,error=error2,tol=h2,
+                              ABCout_accepted=out2) ) )
 }
 
 #

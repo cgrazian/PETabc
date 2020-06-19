@@ -5,7 +5,7 @@
 #' emission tomography.
 #'
 #' @param t time
-#' @param type type of the model. If type=1 is Model 1 in Feng et al. Type=2 represents Model 2 in Feng et al.
+  #' @param type type of the model. If type=1 is Model 1 in Feng et al. Type=2 represents Model 2 in Feng et al.
 #' @return A vector of concentrations for each time point.
 #' @keywords BayesPET
 #' @export
@@ -282,8 +282,8 @@ TAC_One_Compartment=function(K1=0.0918, k2=0.4484, noise="Pois", PLOT=F,
 #' @export
 TAC_2_Compartment=function(K1=0.0918, k2=0.4484, k3=0.0482, k4=0.1363,
                            noise="Pois", PLOT=F, l2=1, l1=3,
-                           tspan=0:60,inputfunction.=inputfunction,
-                           type=type) {
+                           tspan=1:60,inputfunction.=inputfunction,
+                           type=2) {
   #Time Activity Curves Simulations with Normal distributed and Poisson noise
   #Two compartment model l2 (noise level for Pois, decreasing 1:20), l1 (noise level for Normal, increasing 1:10)
 
