@@ -20,8 +20,9 @@
 #' Default inputfunction().
 #' @param type The type of model in the input function.
 #' @param PLOT If plots have to be produced. Default at FALSE.
-#' @return ABCres_single an object of class abc for the single-tissue compartment model.
-#' @return ABCres_two an object of class abc for the two-tissue compartment model.
+#' @return postProb posterior probabilities of the single-tissue compartment model.
+#' @return RMSEsingle root mean squared error of the single-tissue compartment model (on a grid of tolerance levels).
+#' @return RMSEtwo root mean squared error of the two-tissue compartment model (on a grid of tolerance levels).
 #' @keywords PETabc
 #' @export
 MC_abc <- function(y,tspan,abc_single, abc_two,tol1=NULL,tol2=NULL,
@@ -69,78 +70,74 @@ MC_abc <- function(y,tspan,abc_single, abc_two,tol1=NULL,tol2=NULL,
   }
   prob=mprob1/(mprob1+mprob2)
 
-  singtissue= function(t, y, parms){
-    K1c=parms[1]
-    k2c=parms[2]
-    type=parms[3]
-    ipt=inputfunction.(t, type)
-    #differential equation describing the concentration in the reference tissue
-    #input function taken from...
-    dydt= K1c*ipt-k2c*y
-    return(list(c(dydt)))
-  } # end of single-tissue function
+  if(PLOT==T){
+    singtissue= function(t, y, parms){
+      K1c=parms[1]
+      k2c=parms[2]
+      type=parms[3]
+      ipt=inputfunction.(t, type)
+      #differential equation describing the concentration in the reference tissue
+      #input function taken from...
+      dydt= K1c*ipt-k2c*y
+      return(list(c(dydt)))
+    } # end of single-tissue function
 
-  twotissue = function(t, y, parms) {
-    #differential equation describing the concentration in the target tissue
-    #based on a 2 tissue compartment model
-    K1=parms[1]
-    k2=parms[2]
-    k3=parms[3]
-    k4=parms[4]
-    type=parms[5]
-    ipt=inputfunction.(t, type)
-    dydt=c()
-    dydt[1]= ((K1*ipt)-(k2*y[1])-(k3*y[1])+(k4*y[2]))
-    dydt[2]=(k3*y[1]-k4*y[2])
+    twotissue = function(t, y, parms) {
+      #differential equation describing the concentration in the target tissue
+      #based on a 2 tissue compartment model
+      K1=parms[1]
+      k2=parms[2]
+      k3=parms[3]
+      k4=parms[4]
+      type=parms[5]
+      ipt=inputfunction.(t, type)
+      dydt=c()
+      dydt[1]= ((K1*ipt)-(k2*y[1])-(k3*y[1])+(k4*y[2]))
+      dydt[2]=(k3*y[1]-k4*y[2])
 
-    return(list(c(dydt)))
-  } # end of two-tissue function
+      return(list(c(dydt)))
+    } # end of two-tissue function
 
-  pdf("modelprob_TAC.pdf")
-  par(mfrow=c(1,1))
-  plot(y, type="p", lwd=3, xlab="time", ylab="Observations",
-     ylim=c(0, 0.3), cex.lab=1, cex.axis=0.8)
-  parms1=c(parM1,  type)
-  #time interval and sampling
-  out=ode(0, tspan, singtissue, parms1, method="ode45")
-  data1sim=as.vector(t(out[,2]))
-  lines(data1sim, lty=1, lwd=3, col=1)
+    pdf("modelprob_TAC.pdf")
+      par(mfrow=c(1,1))
+      plot(y, type="p", lwd=3, xlab="time", ylab="Observations",
+       ylim=c(0, 0.3), cex.lab=1, cex.axis=0.8)
+      parms1=c(parM1,  type)
+      #time interval and sampling
+      out=ode(0, tspan, singtissue, parms1, method="ode45")
+      data1sim=as.vector(t(out[,2]))
+      lines(data1sim, lty=1, lwd=3, col=1)
 
-  parms2=c(parM2,  type)
-  out=ode(c(0,0), tspan, twotissue, parms2, method="ode45")
-  data2sim=as.vector(t(out[,2])+t(out[,3]))
-  lines(data2sim, lty=2, lwd=3, col=1)
+      parms2=c(parM2,  type)
+      out=ode(c(0,0), tspan, twotissue, parms2, method="ode45")
+      data2sim=as.vector(t(out[,2])+t(out[,3]))
+      lines(data2sim, lty=2, lwd=3, col=1)
 
-  legend("topright",c("single","two"),lty=c(1,2),lwd=2)
-  dev.off()
+      legend("topright",c("single","two"),lty=c(1,2),lwd=2)
+    dev.off()
 
-#    par(mfrow=c(1,1))
-#    plot(hgrid, prob[1,], ylim=c(0,1),type="l")
-#    lines(hgrid, RMSE1[1,], col=2)
-#    lines(hgrid, RMSE2[1,], col=3)
+    pdf("modelprobWW_M1.pdf")
+      par(mfrow=c(1,1))
+      plot(hgrid, prob[1,], type="l", lwd=3, col=1, lty=1,
+         xlab="tolerance", ylab="model prob", ylim=c(0,1),
+         cex.lab=1.6,cex.axis=0.8)
+      indgrid1=which(RMSE1[1,]==min(RMSE1[1,], na.rm=T))
+      indgrid2=which(RMSE2[1,]==min(RMSE2[1,], na.rm=T))
+      hh=(hgrid[indgrid1]+ hgrid[indgrid2])/2
+      abline(v=hh)
+    dev.off()
 
-  pdf("modelprobWW_M1.pdf")
-    par(mfrow=c(1,1))
-    plot(hgrid, prob[1,], type="l", lwd=3, col=1, lty=1,
-       xlab="tolerance", ylab="model prob", ylim=c(0,1),
-       cex.lab=1.6,cex.axis=0.8)
-    indgrid1=which(RMSE1[1,]==min(RMSE1[1,], na.rm=T))
-    #half way betwwen the two minimums
-    indgrid2=which(RMSE2[1,]==min(RMSE2[1,], na.rm=T))
-    hh=(hgrid[indgrid1]+ hgrid[indgrid2])/2
-    abline(v=hh)
-  dev.off()
-
-  pdf("modelprobWW_RMSE.pdf") #WW=1
-    par(mfrow=c(1,1))
-    plot(hgrid, RMSE1[1,], type="l", lty=1, lwd=3, col=1, xlab="tolerance",
-       ylab="RMSE", cex.lab=1.6, cex.axis=0.8)
-    lines(hgrid, RMSE2[1,], lty=2, lwd=3, col=1)
-    indgrid1=which(RMSE1[1,]==min(RMSE1[1,], na.rm=T))
-    #half way betwwen the two minimums
-    indgrid2=which(RMSE2[1, ]==min(RMSE2[1, ], na.rm=T))
-    hh=(hgrid[indgrid1]+ hgrid[indgrid2])/2
-    abline(v=hh)
-  dev.off()
-
+    pdf("modelprobWW_RMSE.pdf") #WW=1
+      par(mfrow=c(1,1))
+      plot(hgrid, RMSE1[1,], type="l", lty=1, lwd=3, col=1, xlab="tolerance",
+         ylab="RMSE", cex.lab=1.6, cex.axis=0.8)
+      lines(hgrid, RMSE2[1,], lty=2, lwd=3, col=1)
+      indgrid1=which(RMSE1[1,]==min(RMSE1[1,], na.rm=T))
+      #half way betwwen the two minimums
+      indgrid2=which(RMSE2[1, ]==min(RMSE2[1, ], na.rm=T))
+      hh=(hgrid[indgrid1]+ hgrid[indgrid2])/2
+      abline(v=hh)
+    dev.off()
+  }
+  return(list(postProb=prob,RMSEsingle=RMSE1,RMSEtwo=RMSE2))
 }

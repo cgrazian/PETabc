@@ -2,6 +2,7 @@
 
 export(GenCurve)
 export(MC_abc)
+export(MC_abc_lpntPET)
 export(PETabc)
 export(TAC_2_Compartment)
 export(TAC_One_Compartment)

@@ -45,9 +45,11 @@ function will be used. Default NULL.}
 Default inputfunction().}
 }
 \value{
-ABCres_single an object of class abc for the single-tissue compartment model.
+postProb posterior probabilities of the single-tissue compartment model.
 
-ABCres_two an object of class abc for the two-tissue compartment model.
+RMSEsingle root mean squared error of the single-tissue compartment model (on a grid of tolerance levels).
+
+RMSEtwo root mean squared error of the two-tissue compartment model (on a grid of tolerance levels).
 }
 \description{
 This function peforms model choice between the single-tissue and the
