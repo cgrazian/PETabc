@@ -1,22 +1,22 @@
 #' Model choice function.
 #'
-#' This function peforms model choice between the single-tissue and the 
+#' This function peforms model choice between the single-tissue and the
 #' two-tissue models based on the outputs of the PETabc() function.
-#' @param y vector of measured radioactivity concentrations in a voxel for 
-#' each time-point. This can be in terms of observations or directly in terms 
+#' @param y vector of measured radioactivity concentrations in a voxel for
+#' each time-point. This can be in terms of observations or directly in terms
 #' of voxel time activity curve.
 #' @param tspan vector of time points of observations.
-#' @param abc_single output of the PETabc() function for the single-tissue 
+#' @param abc_single output of the PETabc() function for the single-tissue
 #' single-tissue compartment model
-#' @param abc_two output of the PETabc() function for the two-tissue 
+#' @param abc_two output of the PETabc() function for the two-tissue
 #' single-tissue compartment model
-#' @param tol1 tolerance level for the single-tissue model. 
-#' If tol1=NULL, the tolerance level automatically chosen by the PETabc() 
+#' @param tol1 tolerance level for the single-tissue model.
+#' If tol1=NULL, the tolerance level automatically chosen by the PETabc()
 #' function will be used. Default NULL.
-#' @param tol2 tolerance level for the two-tissue model. 
-#' If tol2=NULL, the tolerance level automatically chosen by the PETabc() 
+#' @param tol2 tolerance level for the two-tissue model.
+#' If tol2=NULL, the tolerance level automatically chosen by the PETabc()
 #' function will be used. Default NULL.
-#' @param inputfunction A function describing the input function. 
+#' @param inputfunction A function describing the input function.
 #' Default inputfunction().
 #' @param type The type of model in the input function.
 #' @param PLOT If plots have to be produced. Default at FALSE.
@@ -25,16 +25,16 @@
 #' @keywords PETabc
 #' @export
 MC_abc <- function(y,tspan,abc_single, abc_two,tol1=NULL,tol2=NULL,
-                   inputfunction.=inputfunction, 
+                   inputfunction.=inputfunction,
                    type=2,PLOT=F)
 {
   # abc_single: output of the PETabc() function for the single-tissue single-tissue compartment model
   # abc_two   : output of the PETabc() function for the two-tissue single-tissue compartment model
-  # PLOT      : TRUE/FALSE if plots have to be produced   
+  # PLOT      : TRUE/FALSE if plots have to be produced
 
   error1 <- abc_single$error
   error2 <- abc_two$error
-  
+
   parMat1 <- abc_single$ABCout
   parMat2 <- abc_two$ABCout
 
@@ -44,7 +44,7 @@ MC_abc <- function(y,tspan,abc_single, abc_two,tol1=NULL,tol2=NULL,
     out1=parMat1[(error1[,1]<tol1)==1,]
     parM1 <- apply(out1,2,mean)
   }
-  
+
   if(is.null(tol2)==T){
     parM2 <- apply(abc_two$ABCout_accepted,2,mean)
   } else {
@@ -65,7 +65,7 @@ MC_abc <- function(y,tspan,abc_single, abc_two,tol1=NULL,tol2=NULL,
   for (j in c(1:length(hgrid))) {
     ind=error2[,1]<hgrid[j]
     RMSE2[1, j]=sqrt(mean((apply(parMat2[ind==1,], 2,mean)-parM2)^2))
-    mprob2[1, j]=sum(ind)
+      mprob2[1, j]=sum(ind)
   }
   prob=mprob1/(mprob1+mprob2)
 
@@ -92,10 +92,10 @@ MC_abc <- function(y,tspan,abc_single, abc_two,tol1=NULL,tol2=NULL,
     dydt=c()
     dydt[1]= ((K1*ipt)-(k2*y[1])-(k3*y[1])+(k4*y[2]))
     dydt[2]=(k3*y[1]-k4*y[2])
-    
+
     return(list(c(dydt)))
   } # end of two-tissue function
-  
+
   pdf("modelprob_TAC.pdf")
   par(mfrow=c(1,1))
   plot(y, type="p", lwd=3, xlab="time", ylab="Observations",

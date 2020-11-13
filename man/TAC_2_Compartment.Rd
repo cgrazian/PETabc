@@ -13,9 +13,9 @@ TAC_2_Compartment(
   PLOT = F,
   l2 = 1,
   l1 = 3,
-  tspan = 0:60,
+  tspan = 1:60,
   inputfunction. = inputfunction,
-  type = type
+  type = 2
 )
 }
 \arguments{

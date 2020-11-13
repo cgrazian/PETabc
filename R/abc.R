@@ -17,8 +17,12 @@
 #' @param a4 Minimum of the uniform prior for K4. Default to 0 .
 #' @param b4 Maximum of the uniform prior for K4. Default to 0.2 .
 #' @param PLOT If plots have to be produced. Default at FALSE.
-#' @return ABCres_single an object of class abc for the single-tissue compartment model.
-#' @return ABCres_two an object of class abc for the two-tissue compartment model.
+#' @return ABCout a matrix with values simulated from the posterior distribution of the parameters of the selected model.
+#' @return Smat a matrix with values of summary statistics of the simulated curves.
+#' @return ABCout_accepted a matrix with values simulated from the posterior distribution of the parameters
+#' of the selected model; it shows only the values accepted according to the automatically selected threshold.
+#' @return error vector of computed squared differences among the observed and the simulated summary statistics.
+#' @return tol automatically selected tolerance level; this tolerance level is used to define the matrix ABCout_accepted.
 #' @keywords PETabc
 #' @export
 PETabc <- function(y,tspan,N=100000, inputfunction.=inputfunction, type=2,model="single",

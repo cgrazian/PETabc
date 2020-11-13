@@ -6,10 +6,11 @@
 \usage{
 PETabc(
   y,
-  t,
+  tspan,
   N = 1e+05,
   inputfunction. = inputfunction,
   type = 2,
+  model = "single",
   a1 = 0,
   b1 = 0.2,
   a2 = 0.3,
@@ -18,17 +19,20 @@ PETabc(
   b3 = 0.1,
   a4 = 0,
   b4 = 0.2,
-  tol
+  PLOT = F
 )
 }
 \arguments{
 \item{y}{vector of measured radioactivity concentrations in a voxel for each time-point. This can be in terms of observations or directly in terms of voxel time activity curve.}
 
-\item{t}{vector of time points of observations.}
+\item{tspan}{vector of time points of observations.}
 
 \item{N}{Number of simulations. Default to 10^5.}
 
 \item{type}{The type of model in the input function.}
+
+\item{model}{The type of kinetic model: "single" performs the analysis for the single-tisse
+model, "two" performs the analysis for the two-tissue model. Default "single".}
 
 \item{a1}{Minimum of the uniform prior for K1. Default to 0 .}
 
@@ -46,14 +50,21 @@ PETabc(
 
 \item{b4}{Maximum of the uniform prior for K4. Default to 0.2 .}
 
-\item{tol}{Tolerance level of the abc function.}
+\item{PLOT}{If plots have to be produced. Default at FALSE.}
 
 \item{inputfunction}{A function describing the input function. Default inputfunction().}
 }
 \value{
-ABCres_single an object of class abc for the single-tissue compartment model.
+ABCout a matrix with values simulated from the posterior distribution of the parameters of the selected model.
 
-ABCres_two an object of class abc for the two-tissue compartment model.
+Smat a matrix with values of summary statistics of the simulated curves.
+
+ABCout_accepted a matrix with values simulated from the posterior distribution of the parameters
+of the selected model; it shows only the values accepted according to the automatically selected threshold.
+
+error vector of computed squared differences among the observed and the simulated summary statistics.
+
+tol automatically selected tolerance level; this tolerance level is used to define the matrix ABCout_accepted.
 }
 \description{
 This function peforms ABC inference for the compartimental models.
