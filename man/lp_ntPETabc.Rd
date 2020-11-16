@@ -62,7 +62,7 @@ ABCout_act a matrix with values simulated from the posterior distribution of the
 
 Smat_act a matrix with values of summary statistics of the simulated curves for the model with activation.
 
-ABCout_accepted_act a matrix with values simulated from the posterior distribution of the parameters 
+ABCout_accepted_act a matrix with values simulated from the posterior distribution of the parameters
 of the model with activation; it shows only the values accepted according to the automatically selected threshold.
 
 error_act vector of computed squared differences among the observed and the simulated summary statistics for the model with activation.
@@ -73,7 +73,7 @@ ABCout_noact a matrix with values simulated from the posterior distribution of t
 
 Smat_noact a matrix with values of summary statistics of the simulated curves for the model with no activation.
 
-ABCout_accepted_noact a matrix with values simulated from the posterior distribution of the parameters 
+ABCout_accepted_noact a matrix with values simulated from the posterior distribution of the parameters
 of the model with no activation; it shows only the values accepted according to the automatically selected threshold.
 
 error_noact vector of computed squared differences among the observed and the simulated summary statistics for the model with no activation.
