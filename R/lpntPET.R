@@ -16,20 +16,29 @@
 #' @keywords PETabc
 #' @export
 #generate the data from Normandin 2012 model
-  GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
-    col1=Cr
-    col2=cumsum(Cr)
-    col3=-cumsum(Ct)
-    Ind=(Ti-tD)>0
-    ht=pmax(0, (Ti-tD)/(tP-tD))^(alpha)*exp(alpha*(1- (Ti-tD)/(tP-tD)))*Ind
-    col4=-cumsum(Ct*ht)
-    BigMat=cbind(col1, col2, col3, col4)
-    #for model M1 with gamma=0 and M2 with gamma\neq 0
-    theta1=matrix(c(R1, K2, K2a, 0), ncol=1, nrow=4)
-    theta2=matrix(c(R1, K2, K2a, gamma), ncol=1, nrow=4)
+GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
+  #Cr=TACtrueC
+  #Ct=TACtrueS
+  col1=Cr
+  #col2=cumsum(Cr)
+  col2=cumtrapz(Ti, Cr)
+  #col3=-cumsum(Ct)
+  col3=-cumtrapz(Ti, Ct)
+  Ind=(Ti-tD)>0
+  ht=pmax(0, (Ti-tD)/(tP-tD))^(alpha)*exp(alpha*(1- (Ti-tD)/(tP-tD)))*Ind
+  #col4=-cumsum(Ct*ht)
+  col4=-cumtrapz(Ti, Ct*ht)
+  #yy=smooth.spline(c(1:60), Ct, cv=T)$y
+  #col4=-cumtrapz(Ti, yy*ht)
+  #col4=smooth.spline(c(1:60), col4, cv=T)$y
+  BigMat=cbind(col1, col2, col3, col4)
+  theta=matrix(c(R1, K2, K2a, gamma), ncol=1, nrow=4)
+  M2=BigMat%*%theta
+  theta0=matrix(c(R1, K2, K2a, 0), ncol=1, nrow=4)
+  M1=BigMat%*%theta0
+  return(list(M1=M1,M2=M2))
+}
 
-    return(list(M1=BigMat%*%theta1, M2=BigMat%*%theta2))
-  }
 
 
 

@@ -70,8 +70,8 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
     plot(Ti, Ct, type="p", lwd=3, xlab="time", ylab="Observations",
       ylim=c(0,max(data1sim,data2sim,Ct)),cex.lab=1, cex.axis=0.8)
     #time interval and sampling
-    lines(data1sim, lty=1, lwd=3, col=1)
-    lines(data2sim, lty=2, lwd=3, col=1)
+    lines(Ti, data1sim, lty=1, lwd=3, col=1)
+    lines(Ti,data2sim, lty=2, lwd=3, col=1)
     legend("topright",c("no activ.","activ."),lty=c(1,2),lwd=2)
     dev.off()
 
