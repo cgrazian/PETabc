@@ -16,20 +16,20 @@
 #' @keywords PETabc
 #' @export
 #generate the data from Normandin 2012 model
-GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
-  col1=Cr
-  col2=cumsum(Cr)
-  col3=-cumsum(Ct)
-  Ind=(Ti-tD)>0
-  ht=pmax(0, (Ti-tD)/(tP-tD))^(alpha)*exp(alpha*(1- (Ti-tD)/(tP-tD)))*Ind
-  col4=-cumsum(Ct*ht)
-  BigMat=cbind(col1, col2, col3, col4)
-  #for model M1 with gamma=0 and M2 with gamma\neq 0
-  theta1=matrix(c(R1, K2, K2a, 0), ncol=1, nrow=4)
-  theta2=matrix(c(R1, K2, K2a, gamma), ncol=1, nrow=4)
+  GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
+    col1=Cr
+    col2=cumsum(Cr)
+    col3=-cumsum(Ct)
+    Ind=(Ti-tD)>0
+    ht=pmax(0, (Ti-tD)/(tP-tD))^(alpha)*exp(alpha*(1- (Ti-tD)/(tP-tD)))*Ind
+    col4=-cumsum(Ct*ht)
+    BigMat=cbind(col1, col2, col3, col4)
+    #for model M1 with gamma=0 and M2 with gamma\neq 0
+    theta1=matrix(c(R1, K2, K2a, 0), ncol=1, nrow=4)
+    theta2=matrix(c(R1, K2, K2a, gamma), ncol=1, nrow=4)
 
-  return(list(M1=BigMat%*%theta1, M2=BigMat%*%theta2))
-}
+    return(list(M1=BigMat%*%theta1, M2=BigMat%*%theta2))
+  }
 
 
 
@@ -67,8 +67,8 @@ GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
 #' @return tol_noact automatically selected tolerance level for the model with no activation; this tolerance level is used to define the matrix ABCout_accepted.
 #' @keywords PETabc
 #' @export
-lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.5,R1b=1.6,K2alpha=0,K2beta=1,K2a.alpha=0,K2a.beta=0.6,
-                        gamma.a=0,gamma.b=0.2,tD.a=18,tD.b=22,tP.b=40,alpha.a=0,alpha.b=3)
+  lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.5,R1b=1.6,K2alpha=0,K2beta=1,K2a.alpha=0,K2a.beta=0.6,
+                          gamma.a=0,gamma.b=0.2,tD.a=18,tD.b=22,tP.b=40,alpha.a=0,alpha.b=3)
 {
 
   # Observed ummary statistics
@@ -133,12 +133,12 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.5,R1b=1.6,K2alpha=0,K2beta=1,K2a.a
   # Select the values respecting the threshold
   out1=parMat_noact[(errorM1<h1[1])==1,]
 
-  # Chosen threshold for no activation
+  # Chosen threshold for activation
   h2=quantile(errorM2, probs=0.05)
   # Select the values respecting the threshold
   out2=parMat_act[(errorM2<h2[1])==1,]
 
-  return(list(ABCout_act=parMat_act,Smat_act=Smat_act,ABCout_act_accepted=out2,error_act=errorM2,tol_act=h1,
+  return(list(ABCout_act=parMat_act,Smat_act=Smat_act,ABCout_act_accepted=out2,error_act=errorM2,tol_act=h2,
               ABCout_noact=parMat_noact,Smat_noact=Smat_noact,ABCout_noact_accepted=out1,error_noact=errorM1,tol_noact=h1) )
 
 }
