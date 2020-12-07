@@ -33,7 +33,7 @@ GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
   #col4=smooth.spline(c(1:60), col4, cv=T)$y
   BigMat=cbind(col1, col2, col3, col4)
   theta=matrix(c(R1, K2, K2a, gamma), ncol=1, nrow=4)
-  M2=BigMat%*%theta
+    M2=BigMat%*%theta
   theta0=matrix(c(R1, K2, K2a, 0), ncol=1, nrow=4)
   M1=BigMat%*%theta0
   return(list(M1=M1,M2=M2))

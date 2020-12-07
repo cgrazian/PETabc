@@ -31,16 +31,20 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
 
   if(is.null(tol1)==T){
     parM1 <- apply(abc_out$ABCout_noact_accepted,2,mean)
+    parM1_mode <- apply(abc_out$ABCout_noact_accepted,2,Mode)
   } else {
     out1=parMat1[(error1<tol1)==1,]
     parM1 <- apply(out1,2,mean)
+    parM1_mode <- apply(out1,2,Mode)
   }
 
   if(is.null(tol2)==T){
     parM2 <- apply(abc_out$ABCout_act_accepted,2,mean)
+    parM2_mode <- apply(abc_out$ABCout_act_accepted,2,Mode)
   } else {
     out2=parMat2[(error2<tol2)==1,]
     parM2 <- apply(out2,2,mean)
+    parM2_mode <- apply(out2,2,Mode)
   }
 
 #  hgrid=seq(0.05, 0.4, length=10)
@@ -66,13 +70,21 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
     pdf("modelprob_TAC.pdf")
     data1sim=GenCurve(Ct, Cr, Ti, R1=parM1[1], K2=parM1[2], K2a=parM1[3], gamma=0, tD=parM2[5], tP=parM2[6], alpha=parM2[7])$M1
     data2sim=GenCurve(Ct, Cr, Ti, R1=parM2[1], K2=parM2[2], K2a=parM2[3], gamma=parM2[4], tD=parM2[5], tP=parM2[6], alpha=parM2[7])$M2
+    data1sim_mode=GenCurve(Ct, Cr, Ti, R1=parM1_mode[1], K2=parM1_mode[2], K2a=parM1_mode[3],
+                           gamma=0, tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M1
+    data2sim_mode=GenCurve(Ct, Cr, Ti, R1=parM2_mode[1], K2=parM2_mode[2], K2a=parM2_mode[3],
+                           gamma=parM2_mode[4], tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M2
+
     par(mfrow=c(1,1))
     plot(Ti, Ct, type="p", lwd=3, xlab="time", ylab="Observations",
       ylim=c(0,max(data1sim,data2sim,Ct)),cex.lab=1, cex.axis=0.8)
     #time interval and sampling
     lines(Ti, data1sim, lty=1, lwd=3, col=1)
-    lines(Ti,data2sim, lty=2, lwd=3, col=1)
-    legend("topright",c("no activ.","activ."),lty=c(1,2),lwd=2)
+    lines(Ti, data2sim, lty=2, lwd=3, col=1)
+    lines(Ti, data1sim_mode, lty=1, lwd=3, col=2)
+    lines(Ti, data2sim_mode, lty=2, lwd=3, col=2)
+    legend("topright",c("no activ.-mean","activ.-mean","no activ.-mode","activ.-mode"),lty=c(1,2,1,2),
+           col=c(1,1,2,2),lwd=2)
     dev.off()
 
     pdf("modelprobWW_M1.pdf")
@@ -90,7 +102,7 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
     pdf("modelprobWW_RMSE.pdf") #WW=1
     par(mfrow=c(1,1))
     plot(hgrid, RMSE1[1,], type="l", lty=1, lwd=3, col=1, xlab="tolerance",
-         ylab="RMSE", cex.lab=1.6, cex.axis=0.8)
+         ylab="RMSE", cex.lab=1.6, cex.axis=0.8,ylim=c(0,max(RMSE1,RMSE2,na.rm=T)))
     lines(hgrid, RMSE2[1,], lty=2, lwd=3, col=1)
     indgrid1=which(RMSE1[1,]==min(RMSE1[1,], na.rm=T))
     #half way betwwen the two minimums
@@ -99,7 +111,23 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
     abline(v=hh)
     legend("topright",c("no activ.","activ."),lty=c(1,2),lwd=2)
     dev.off()
-  }
 
-  return(list(postProb=prob,RMSEnoact=RMSE1,RMSEact=RMSE2))
+    pdf("modelprobWW_RMSE_two.pdf") #WW=1
+    par(mfrow=c(1,2))
+    plot(hgrid, RMSE1[1,], type="l", lty=1, lwd=3, col=1, xlab="tolerance",main="no act.",
+         ylab="RMSE", cex.lab=1.6, cex.axis=0.8,ylim=c(0,max(RMSE1,RMSE2,na.rm=T)))
+    indgrid1=which(RMSE1[1,]==min(RMSE1[1,], na.rm=T))
+    abline(v=hgrid[indgrid1])
+
+    plot(hgrid, RMSE2[1,], type="l", lty=2, lwd=3, col=1, xlab="tolerance",main="act.",
+         ylab="RMSE", cex.lab=1.6, cex.axis=0.8,ylim=c(0,max(RMSE1,RMSE2,na.rm=T)))
+    indgrid2=which(RMSE2[1,]==min(RMSE2[1,], na.rm=T))
+    abline(v=hgrid[indgrid2])
+
+    dev.off()
+
+    }
+
+    return(list(postProb=prob,RMSEnoact=RMSE1,RMSEact=RMSE2,parMnoact_mean=parM1,parMact_mean=parM2,
+                parMnoact_mode=parM1_mode,parMact_mode=parM2_mode))
 }
