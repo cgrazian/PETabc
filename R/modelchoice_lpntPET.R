@@ -1,3 +1,21 @@
+#' Mode function.
+#'
+#' This function computes the modal value of a kernel density estimate of a vector of
+#' (possibly) continuous values.
+#' @param xvec vector of values for which to compute the kernel density estimate.
+#' @return The modal value of the kernel density estimate of the vector used as input.
+#' @keywords PETabc
+#' @export
+mode_value <- function(xvec){
+  density_estimate <- density(xvec)
+  mode_value <- density_estimate$x[which.max(density_estimate$y)]
+  return(mode_value)
+}
+
+
+
+
+
 #' Model choice function for the lp-ntPET model.
 #'
 #' This function peforms model choice between the lp-ntPET model with activation and without activation.
@@ -31,7 +49,7 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
 
   if(is.null(tol1)==T){
     parM1 <- apply(abc_out$ABCout_noact_accepted,2,mean)
-    parM1_mode <- apply(abc_out$ABCout_noact_accepted,2,Mode)
+    parM1_mode <- apply(abc_out$ABCout_noact_accepted,2,mode_value)
   } else {
     out1=parMat1[(error1<tol1)==1,]
     parM1 <- apply(out1,2,mean)
@@ -40,7 +58,7 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
 
   if(is.null(tol2)==T){
     parM2 <- apply(abc_out$ABCout_act_accepted,2,mean)
-    parM2_mode <- apply(abc_out$ABCout_act_accepted,2,Mode)
+    parM2_mode <- apply(abc_out$ABCout_act_accepted,2,mode_value)
   } else {
     out2=parMat2[(error2<tol2)==1,]
     parM2 <- apply(out2,2,mean)
