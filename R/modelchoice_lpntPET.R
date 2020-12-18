@@ -47,6 +47,9 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
   parMat1 <- abc_out$ABCout_noact
   parMat2 <- abc_out$ABCout_act
 
+  parM1_min=parMat1[(error1==min(error1,na.rm=T))==1,]
+  parM2_min=parMat2[(error2==min(error2,na.rm=T))==1,]
+
   if(is.null(tol1)==T){
     parM1 <- apply(abc_out$ABCout_noact_accepted,2,mean)
     parM1_mode <- apply(abc_out$ABCout_noact_accepted,2,mode_value)
@@ -56,7 +59,7 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
     parM1_mode <- apply(out1,2,Mode)
   }
 
-  if(is.null(tol2)==T){
+    if(is.null(tol2)==T){
     parM2 <- apply(abc_out$ABCout_act_accepted,2,mean)
     parM2_mode <- apply(abc_out$ABCout_act_accepted,2,mode_value)
   } else {
@@ -92,6 +95,13 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
                            gamma=0, tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M1
     data2sim_mode=GenCurve(Ct, Cr, Ti, R1=parM2_mode[1], K2=parM2_mode[2], K2a=parM2_mode[3],
                            gamma=parM2_mode[4], tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M2
+    data1sim_min=GenCurve(Ct, Cr, Ti, R1=parM1_min[1], K2=parM1_min[2],
+                          K2a=parM1_min[3],gamma=0, tD=parM2_min[5],
+                          tP=parM2_min[6], alpha=parM2_min[7])$M1
+    data2sim_min=GenCurve(Ct, Cr, Ti, R1=parM2_min[1], K2=parM2_min[2],
+                          K2a=parM2_min[3],gamma=parM2_min[4],
+                          tD=parM2_min[5], tP=parM2_min[6],
+                          alpha=parM2_min[7])$M2
 
     par(mfrow=c(1,1))
     plot(Ti, Ct, type="p", lwd=3, xlab="time", ylab="Observations",
@@ -99,10 +109,10 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
     #time interval and sampling
     lines(Ti, data1sim, lty=1, lwd=3, col=1)
     lines(Ti, data2sim, lty=2, lwd=3, col=1)
-    lines(Ti, data1sim_mode, lty=1, lwd=3, col=2)
-    lines(Ti, data2sim_mode, lty=2, lwd=3, col=2)
-    legend("topright",c("no activ.-mean","activ.-mean","no activ.-mode","activ.-mode"),lty=c(1,2,1,2),
-           col=c(1,1,2,2),lwd=2)
+    lines(Ti, data1sim_min, lty=1, lwd=3, col=2)
+    lines(Ti, data2sim_min, lty=2, lwd=3, col=2)
+    legend("topright",c("no activ.-mean","activ.-mean","no activ.-min err","activ.-min err"),lty=c(1,2,1,2),
+           col=c(1,1,2,2),lwd=2,cex=0.8)
     dev.off()
 
     pdf("modelprobWW_M1.pdf")
@@ -147,5 +157,6 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
     }
 
     return(list(postProb=prob,RMSEnoact=RMSE1,RMSEact=RMSE2,parMnoact_mean=parM1,parMact_mean=parM2,
-                parMnoact_mode=parM1_mode,parMact_mode=parM2_mode))
+                parMnoact_mode=parM1_mode,parMact_mode=parM2_mode,
+                parMnoact_min=parM1_min,parMact_min=parM2_min))
 }
