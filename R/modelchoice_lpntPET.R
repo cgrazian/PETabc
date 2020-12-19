@@ -41,6 +41,9 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
   # abc_two   : output of the PETabc() function for the two-tissue single-tissue compartment model
   # PLOT      : TRUE/FALSE if plots have to be produced
 
+  parM1_nnls <- abc_out$nnls_noa
+  parM2_nnls <- abc_out$nnls_a
+
   error1 <- abc_out$error_noact
   error2 <- abc_out$error_act
 
@@ -91,10 +94,10 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
     pdf("modelprob_TAC.pdf")
     data1sim=GenCurve(Ct, Cr, Ti, R1=parM1[1], K2=parM1[2], K2a=parM1[3], gamma=0, tD=parM2[5], tP=parM2[6], alpha=parM2[7])$M1
     data2sim=GenCurve(Ct, Cr, Ti, R1=parM2[1], K2=parM2[2], K2a=parM2[3], gamma=parM2[4], tD=parM2[5], tP=parM2[6], alpha=parM2[7])$M2
-    data1sim_mode=GenCurve(Ct, Cr, Ti, R1=parM1_mode[1], K2=parM1_mode[2], K2a=parM1_mode[3],
-                           gamma=0, tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M1
-    data2sim_mode=GenCurve(Ct, Cr, Ti, R1=parM2_mode[1], K2=parM2_mode[2], K2a=parM2_mode[3],
-                           gamma=parM2_mode[4], tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M2
+#    data1sim_mode=GenCurve(Ct, Cr, Ti, R1=parM1_mode[1], K2=parM1_mode[2], K2a=parM1_mode[3],
+#                           gamma=0, tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M1
+#    data2sim_mode=GenCurve(Ct, Cr, Ti, R1=parM2_mode[1], K2=parM2_mode[2], K2a=parM2_mode[3],
+#                           gamma=parM2_mode[4], tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M2
     data1sim_min=GenCurve(Ct, Cr, Ti, R1=parM1_min[1], K2=parM1_min[2],
                           K2a=parM1_min[3],gamma=0, tD=parM2_min[5],
                           tP=parM2_min[6], alpha=parM2_min[7])$M1
@@ -102,17 +105,28 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
                           K2a=parM2_min[3],gamma=parM2_min[4],
                           tD=parM2_min[5], tP=parM2_min[6],
                           alpha=parM2_min[7])$M2
+    data1sim_nnls=GenCurve(Ct, Cr, Ti, R1=parM1_nnls[1], K2=parM1_nnls[2],
+                          K2a=parM1_nnls[3],gamma=0, tD=parM2_nnls[5],
+                          tP=parM2_nnls[6], alpha=parM2_nnls[7])$M1
+    data2sim_nnls=GenCurve(Ct, Cr, Ti, R1=parM2_nnls[1], K2=parM2_nnls[2],
+                          K2a=parM2_nnls[3],gamma=parM2_nnls[4],
+                          tD=parM2_nnls[5], tP=parM2_nnls[6],
+                          alpha=parM2_nnls[7])$M2
 
     par(mfrow=c(1,1))
     plot(Ti, Ct, type="p", lwd=3, xlab="time", ylab="Observations",
       ylim=c(0,max(data1sim,data2sim,Ct)),cex.lab=1, cex.axis=0.8)
     #time interval and sampling
-    lines(Ti, data1sim, lty=1, lwd=3, col=1)
-    lines(Ti, data2sim, lty=2, lwd=3, col=1)
-    lines(Ti, data1sim_min, lty=1, lwd=3, col=2)
-    lines(Ti, data2sim_min, lty=2, lwd=3, col=2)
-    legend("topright",c("no activ.-mean","activ.-mean","no activ.-min err","activ.-min err"),lty=c(1,2,1,2),
-           col=c(1,1,2,2),lwd=2,cex=0.8)
+    lines(Ti, data1sim, lty=1, lwd=2, col=1)
+    lines(Ti, data2sim, lty=2, lwd=2, col=1)
+    lines(Ti, data1sim_min, lty=1, lwd=2, col=2)
+    lines(Ti, data2sim_min, lty=2, lwd=2, col=2)
+    lines(Ti, data1sim_nnls, lty=1, lwd=2, col=3)
+    lines(Ti, data2sim_nnls, lty=2, lwd=2, col=3)
+    legend("topright",c("no activ.-mean","activ.-mean","no activ.-min err",
+                        "activ.-min err","no activ.-nnls","activ.-nnls"),
+           lty=c(1,2,1,2,1,2),
+           col=c(1,1,2,2,3,3),lwd=2,cex=0.8)
     dev.off()
 
     pdf("modelprobWW_M1.pdf")

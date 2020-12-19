@@ -76,11 +76,46 @@ GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
 #' @return tol_noact automatically selected tolerance level for the model with no activation; this tolerance level is used to define the matrix ABCout_accepted.
 #' @keywords PETabc
 #' @export
-  lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.5,R1b=1.6,K2alpha=0,K2beta=1,K2a.alpha=0,K2a.beta=0.6,
+lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.5,R1b=1.6,K2alpha=0,K2beta=1,K2a.alpha=0,K2a.beta=0.6,
                           gamma.a=0,gamma.b=0.2,tD.a=18,tD.b=22,tP.b=40,alpha.a=0,alpha.b=3)
 {
 
-  # Observed ummary statistics
+  #### nnls
+  # model with no activation
+  col1=data$Cr
+  col2=cumtrapz(Ti, Cr)
+  col3=-cumtrapz(Ti, Ct)
+  BigMat=cbind(col1, col2, col3)
+  obj_nnls_noa <- nnls(BigMat,Ct)
+
+  # model with activation
+  count=0
+  res_vec <- c()
+  for(tD in tD.a:tD.b)
+    {
+      for(tP in (tD+1):tP.b)
+      {
+        for(alpha in seq(alpha.a,alpha.b,0.1))
+        {
+          count <- count + 1
+          Ind=(Ti-tD)>0
+          ht=pmax(0, (Ti-tD)/(tP-tD))^(alpha)*
+            exp(alpha*(1- (Ti-tD)/(tP-tD)))*Ind
+          col4=-cumtrapz(Ti, Ct*ht)
+          BigMat=cbind(col1, col2, col3, col4)
+          obj_nnls_Ma <- nnls(BigMat,Ct)
+          if(count==1){
+            nnls_mat <- matrix(c(obj_nnls_Ma$x,tD,tP,alpha),ncol=7,nrow=1)
+          } else {
+            nnls_mat <- rbind(nnls_mat,c(obj_nnls_Ma$x,tD,tP,alpha))
+          }
+          res_vec <- c(res_vec,obj_nnls_Ma$rnorm)
+        }
+      }
+    }
+  obj_nnls_a <- nnls_mat[res_vec==min(res_vec),]
+
+  # Observed summary statistics
   nT=length(Ti)
   Sobs=smooth.spline(c(1:nT), Ct, df=15)$y
 
@@ -148,7 +183,8 @@ GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
   out2=parMat_act[(errorM2<h2[1])==1,]
 
   return(list(ABCout_act=parMat_act,Smat_act=Smat_act,ABCout_act_accepted=out2,error_act=errorM2,tol_act=h2,
-              ABCout_noact=parMat_noact,Smat_noact=Smat_noact,ABCout_noact_accepted=out1,error_noact=errorM1,tol_noact=h1) )
+              ABCout_noact=parMat_noact,Smat_noact=Smat_noact,ABCout_noact_accepted=out1,error_noact=errorM1,tol_noact=h1,
+              nnls_noa=obj_nnls_noa$x,nnls_a=obj_nnls_a) )
 
 }
 
