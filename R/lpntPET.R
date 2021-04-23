@@ -87,7 +87,7 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
                         gamma.a=0,gamma.b=0.2,tD.a=15,tD.b=25,tP.b=40,alpha.a=0,alpha.b=3,lsq=1) {
   #### nnls - option 1
   # model with no activation: MRTM
-  col1=data$Cr
+  col1=Cr
   if (lsq==1) {
     col2=cumtrapz(Ti, Cr)
     col3=-cumtrapz(Ti, Ct)
@@ -123,7 +123,6 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
   #### wnnls - option 2
   if (lsq==2) {
     # model with no activation
-    #col1=data$Cr
     col1=Cr
     col2=cumtrapz(Ti, Cr)
     col3=-cumtrapz(Ti, Ct)
@@ -158,10 +157,7 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
           } else {
             wnnls_mat <- rbind(wnnls_mat,c(obj_wnnls_Ma$x,tD,tP,alpha))
           }
-          res_vec <- c(res_vec,sum(obj_wnnls_Ma$residuals^2))#what is the rnorm for?
-          #we think this should be weighted residuals but we can check against
-          #sum(weights*(Ct-obj_wnnls_noa$fitted)^2)
-          #sum(weightvec*(Ct-obj_wnnls_noa$fitted)^2)
+          res_vec <- c(res_vec,sum(obj_wnnls_Ma$residuals^2))
         }
       }
     }
