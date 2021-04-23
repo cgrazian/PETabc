@@ -9,19 +9,20 @@ lp_ntPETabc(
   Cr,
   Ti,
   S = 10^5,
-  R1a = 0.5,
-  R1b = 1.6,
-  K2alpha = 0,
-  K2beta = 1,
-  K2a.alpha = 0,
-  K2a.beta = 0.6,
+  R1a = 0.8,
+  R1b = 1.1,
+  K2alpha = 0.2,
+  K2beta = 0.6,
+  K2a.alpha = 0.1,
+  K2a.beta = 0.4,
   gamma.a = 0,
   gamma.b = 0.2,
-  tD.a = 18,
-  tD.b = 22,
+  tD.a = 15,
+  tD.b = 25,
   tP.b = 40,
   alpha.a = 0,
-  alpha.b = 3
+  alpha.b = 3,
+  lsq = 1
 )
 }
 \arguments{

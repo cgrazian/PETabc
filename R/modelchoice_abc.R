@@ -1,4 +1,4 @@
-#' Model choice function.
+    #' Model choice function.
 #'
 #' This function peforms model choice between the single-tissue and the
 #' two-tissue models based on the outputs of the PETabc() function.

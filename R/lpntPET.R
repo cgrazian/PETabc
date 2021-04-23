@@ -13,6 +13,7 @@
 #' @param alpha sharpeness parameters of the response function.
 #' @return M1 data under the model with no activation (gamma=0).
 #' @return M2 data under the model with activation (gamma different from 0).
+#' @import pracma
 #' @keywords PETabc
 #' @export
 #generate the data from Normandin 2012 model
@@ -33,7 +34,7 @@ GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
   #col4=smooth.spline(c(1:60), col4, cv=T)$y
   BigMat=cbind(col1, col2, col3, col4)
   theta=matrix(c(R1, K2, K2a, gamma), ncol=1, nrow=4)
-    M2=BigMat%*%theta
+  M2=BigMat%*%theta
   theta0=matrix(c(R1, K2, K2a, 0), ncol=1, nrow=4)
   M1=BigMat%*%theta0
   return(list(M1=M1,M2=M2))
@@ -74,29 +75,32 @@ GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
 #' of the model with no activation; it shows only the values accepted according to the automatically selected threshold.
 #' @return error_noact vector of computed squared differences among the observed and the simulated summary statistics for the model with no activation.
 #' @return tol_noact automatically selected tolerance level for the model with no activation; this tolerance level is used to define the matrix ABCout_accepted.
+#' @import pracma
+#' @import nnls
 #' @keywords PETabc
 #' @export
-lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.5,R1b=1.6,K2alpha=0,K2beta=1,K2a.alpha=0,K2a.beta=0.6,
-                          gamma.a=0,gamma.b=0.2,tD.a=18,tD.b=22,tP.b=40,alpha.a=0,alpha.b=3)
-{
+# Similar to rat [11C]raclopride studies:
+# R1 = 1;K2 = 0.43;K2a = 0.23; = 0.07; tD = 20; tP = 35; alpha= 1
+# Choose flag for lsq=1,2 or 3 depending on the least square method to apply
 
-  #### nnls
-  # model with no activation
+lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K2a.alpha=0.1,K2a.beta=0.4,
+                        gamma.a=0,gamma.b=0.2,tD.a=15,tD.b=25,tP.b=40,alpha.a=0,alpha.b=3,lsq=1) {
+  #### nnls - option 1
+  # model with no activation: MRTM
   col1=data$Cr
-  col2=cumtrapz(Ti, Cr)
-  col3=-cumtrapz(Ti, Ct)
-  BigMat=cbind(col1, col2, col3)
-  obj_nnls_noa <- nnls(BigMat,Ct)
+  if (lsq==1) {
+    col2=cumtrapz(Ti, Cr)
+    col3=-cumtrapz(Ti, Ct)
+    BigMat=cbind(col1, col2, col3)
+    obj_nnls_noa <- nnls(BigMat,Ct)
 
-  # model with activation
-  count=0
-  res_vec <- c()
-  for(tD in tD.a:tD.b)
-    {
-      for(tP in (tD+1):tP.b)
-      {
-        for(alpha in seq(alpha.a,alpha.b,0.1))
-        {
+    # model with activation: lp-ntPET
+    # Keep the same range for the sampling of td, tp and alpha
+    count=0
+    res_vec <- c()
+    for (tD in seq(tD.a,tD.b,0.25)) {
+      for (tP in seq (tD+1,tP.b,0.25)) {
+        for (alpha in seq(alpha.a,alpha.b,0.25)) {
           count <- count + 1
           Ind=(Ti-tD)>0
           ht=pmax(0, (Ti-tD)/(tP-tD))^(alpha)*
@@ -104,16 +108,81 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.5,R1b=1.6,K2alpha=0,K2beta=1,K2a.a
           col4=-cumtrapz(Ti, Ct*ht)
           BigMat=cbind(col1, col2, col3, col4)
           obj_nnls_Ma <- nnls(BigMat,Ct)
-          if(count==1){
+          if (count==1){
             nnls_mat <- matrix(c(obj_nnls_Ma$x,tD,tP,alpha),ncol=7,nrow=1)
           } else {
             nnls_mat <- rbind(nnls_mat,c(obj_nnls_Ma$x,tD,tP,alpha))
           }
-          res_vec <- c(res_vec,obj_nnls_Ma$rnorm)
+          res_vec <- c(res_vec,sum(obj_nnls_Ma$residuals))
         }
       }
     }
-  obj_nnls_a <- nnls_mat[res_vec==min(res_vec),]
+    obj_nnls_a <- nnls_mat[res_vec==min(res_vec),]
+  }
+
+  #### wnnls - option 2
+  if (lsq==2) {
+    # model with no activation
+    #col1=data$Cr
+    col1=Cr
+    col2=cumtrapz(Ti, Cr)
+    col3=-cumtrapz(Ti, Ct)
+    weights=diag(1.0/(sqrt(Ct)+eps))
+    wCt=weights%*%Ct
+    BigMat=cbind(col1, col2, col3)
+    wBigMat=weights%*%BigMat
+    obj_wnnls_noa <- nnls(wBigMat,wCt)
+    sum(obj_wnnls_noa$residuals^2)
+    weightvec=1.0/(sqrt(Ct)+eps)
+    sum(weightvec*(Ct-obj_wnnls_noa$fitted)^2)
+
+    # model with activation
+    count=0
+    res_vec <- c()
+    for (tD in seq(td.a,td.b,0.25))
+    {
+      for (tP in seq (tD+1,tP.b,0.25))
+      {
+        for (alpha in seq(alpha.a,alpha.b,0.25))
+        {
+          count <- count + 1
+          Ind=(Ti-tD)>0
+          ht=pmax(0, (Ti-tD)/(tP-tD))^(alpha)*
+            exp(alpha*(1- (Ti-tD)/(tP-tD)))*Ind
+          col4=-cumtrapz(Ti, Ct*ht)
+          BigMat=cbind(col1, col2, col3, col4)
+          wBigMat=weights%*%BigMat
+          obj_wnnls_Ma <- nnls(wBigMat,wCt)
+          if (count==1){
+            wnnls_mat <- matrix(c(obj_wnnls_Ma$x,tD,tP,alpha),ncol=7,nrow=1)
+          } else {
+            wnnls_mat <- rbind(wnnls_mat,c(obj_wnnls_Ma$x,tD,tP,alpha))
+          }
+          res_vec <- c(res_vec,sum(obj_wnnls_Ma$residuals^2))#what is the rnorm for?
+          #we think this should be weighted residuals but we can check against
+          #sum(weights*(Ct-obj_wnnls_noa$fitted)^2)
+          #sum(weightvec*(Ct-obj_wnnls_noa$fitted)^2)
+        }
+      }
+    }
+
+    #the residuals are calculated for all combinations of implicit parameters, td, tp, alpha
+    #RSS or res_vec=sum(weights*(Ct-FittedCt)*(Ct-FittedCt))
+    obj_wnnls_a <- wnnls_mat[res_vec==min(res_vec),] # estimated parameters selected from minimum res_vec
+  }
+
+  #### wls - option 3 -to be modified completely use lm()
+  if (lsq==3) {
+
+    # model with no activation
+
+    #to be completed and checked
+    #Maybe just use: x = (WBigMat'*WBigMat)\WBigMat'*wCt; % x = inv(WBigMat'*WBigMat)\WBigMat'*wCt;
+    #instead of lm()
+
+    # model with activation
+  }
+
 
   # Observed summary statistics
   nT=length(Ti)
@@ -125,7 +194,7 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.5,R1b=1.6,K2alpha=0,K2beta=1,K2a.a
   Smat_act <- matrix(NA, nrow=S,ncol=length(Ti))
   Smat_noact <- matrix(NA, nrow=S,ncol=length(Ti))
 
-  for(iter in 1:S){
+  for (iter in 1:S){
     # Simulation of the parameters from their prior distributions
     R1=runif(1, R1a, R1b)
     K2=runif(1, K2alpha, K2beta)
@@ -182,9 +251,9 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.5,R1b=1.6,K2alpha=0,K2beta=1,K2a.a
   # Select the values respecting the threshold
   out2=parMat_act[(errorM2<h2[1])==1,]
 
+  #modify returned values depending on the least square method used
   return(list(ABCout_act=parMat_act,Smat_act=Smat_act,ABCout_act_accepted=out2,error_act=errorM2,tol_act=h2,
               ABCout_noact=parMat_noact,Smat_noact=Smat_noact,ABCout_noact_accepted=out1,error_noact=errorM1,tol_noact=h1,
-              nnls_noa=obj_nnls_noa$x,nnls_a=obj_nnls_a) )
+              nnls_noa=obj_nnls_noa$x,nnls_a=obj_nnls_a) )#modify depending on the least square method used
 
 }
-
