@@ -22,7 +22,8 @@ lp_ntPETabc(
   tP.b = 40,
   alpha.a = 0,
   alpha.b = 3,
-  lsq = 1
+  lsq = 1,
+  PLOT = T
 )
 }
 \arguments{
@@ -57,6 +58,10 @@ lp_ntPETabc(
 \item{alpha.a}{lower bound of the uniform prior distribution for alpha. Default at 0.}
 
 \item{alpha.b}{upper bound of the uniform prior distribution for alpha. Default at 3.}
+
+\item{lsq}{type of least squares estimation: 1 for non-negative least squares, 2 for weighted non-negative least squares. Default at 1.}
+
+\item{PLOT}{If plots have to be produced. Default at TRUE.}
 }
 \value{
 ABCout_act a matrix with values simulated from the posterior distribution of the parameters of the model with activation.

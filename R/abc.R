@@ -16,7 +16,7 @@
 #' @param b3 Maximum of the uniform prior for K3. Default to 0.1 .
 #' @param a4 Minimum of the uniform prior for K4. Default to 0 .
 #' @param b4 Maximum of the uniform prior for K4. Default to 0.2 .
-#' @param PLOT If plots have to be produced. Default at FALSE.
+#' @param PLOT If plots have to be produced. Default at TRUE.
 #' @return ABCout a matrix with values simulated from the posterior distribution of the parameters of the selected model.
 #' @return Smat a matrix with values of summary statistics of the simulated curves.
 #' @return ABCout_accepted a matrix with values simulated from the posterior distribution of the parameters
@@ -26,7 +26,7 @@
 #' @keywords PETabc
 #' @export
 PETabc <- function(y,tspan,N=100000, inputfunction.=inputfunction, type=2,model="single",
-                   a1=0,b1=0.2,a2=0.3,b2=0.5,a3=0,b3=0.1,a4=0,b4=0.2, PLOT=F)
+                   a1=0,b1=0.2,a2=0.3,b2=0.5,a3=0,b3=0.1,a4=0,b4=0.2, PLOT=T)
 {
   # y: vector of measured radioactivity concentrations in a voxel for each time-point. This can be in terms of observations or directly in terms of voxel time activity curve.
   # t: vector of time points of observations
@@ -242,13 +242,6 @@ PETabc <- function(y,tspan,N=100000, inputfunction.=inputfunction, type=2,model=
     } # end of plots for two-tissue
   } # end of plots
 
-
-#  out1=abc(target=Sobs, param=parMat1, sumstat=Smat1, tol=tol,
-#           method=method)
-#  out2=abc(target=Sobs, param=parMat2, sumstat=Smat2, tol=tol,
-#           method=method)
-  #  adj=out$adj.values
-  #  unadj=out$unadj.values
 
   ### Output: files
   if(model=="single"){

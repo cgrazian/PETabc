@@ -63,6 +63,8 @@ GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
 #' @param tP.b upper bound of the uniform prior distribution for tP. Default at 40.
 #' @param alpha.a lower bound of the uniform prior distribution for alpha. Default at 0.
 #' @param alpha.b upper bound of the uniform prior distribution for alpha. Default at 3.
+#' @param lsq type of least squares estimation: 1 for non-negative least squares, 2 for weighted non-negative least squares. Default at 1.
+#' @param PLOT If plots have to be produced. Default at TRUE.
 #' @return ABCout_act a matrix with values simulated from the posterior distribution of the parameters of the model with activation.
 #' @return Smat_act a matrix with values of summary statistics of the simulated curves for the model with activation.
 #' @return ABCout_accepted_act a matrix with values simulated from the posterior distribution of the parameters
@@ -84,7 +86,7 @@ GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
 # Choose flag for lsq=1,2 or 3 depending on the least square method to apply
 
 lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K2a.alpha=0.1,K2a.beta=0.4,
-                        gamma.a=0,gamma.b=0.2,tD.a=15,tD.b=25,tP.b=40,alpha.a=0,alpha.b=3,lsq=1) {
+                        gamma.a=0,gamma.b=0.2,tD.a=15,tD.b=25,tP.b=40,alpha.a=0,alpha.b=3,lsq=1, PLOT=T) {
   #### nnls - option 1
   # model with no activation: MRTM
   col1=Cr
@@ -167,19 +169,6 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
     obj_wnnls_a <- wnnls_mat[res_vec==min(res_vec),] # estimated parameters selected from minimum res_vec
   }
 
-  #### wls - option 3 -to be modified completely use lm()
-  if (lsq==3) {
-
-    # model with no activation
-
-    #to be completed and checked
-    #Maybe just use: x = (WBigMat'*WBigMat)\WBigMat'*wCt; % x = inv(WBigMat'*WBigMat)\WBigMat'*wCt;
-    #instead of lm()
-
-    # model with activation
-  }
-
-
   # Observed summary statistics
   nT=length(Ti)
   Sobs=smooth.spline(c(1:nT), Ct, df=15)$y
@@ -215,23 +204,29 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
 
       cat(iter, "..\n")
 
-      parMat_temp <- parMat_noact[1:iter,]
+      parMat_noact_temp <- parMat_noact[1:iter,]
       error_temp <- errorM1[1:iter]
       h1=quantile(error_temp, probs=0.05)
-      out1=parMat_temp[(error_temp<h1[1])==1,]
+      out1=parMat_noact_temp[(error_temp<h1[1])==1,]
 
-      parMat_temp <- parMat_act[1:iter,]
+      parMat_act_temp <- parMat_act[1:iter,]
       error_temp <- errorM2[1:iter]
       h2=quantile(error_temp, probs=0.05)
-      out2=parMat_temp[(error_temp<h2[1])==1,]
+      out2=parMat_act_temp[(error_temp<h2[1])==1,]
 
-      # par(mfrow=c(1,2))
-      # plot(density(out1[,1]),main="K1",
-      #      xlab="K1")
-      # abline(v=mean(out1[,1]))
-      # plot(density(out1[,2]),main="k2",
-      #      xlab="k2")
-      # abline(v=mean(out1[,2]))
+      par(mfrow=c(2,2))
+
+      plot(density(out2[,5]),main="lp-ntPET with act",xlab=expression(t[D]))
+      abline(v=mean(out2[,5]))
+
+      plot(density(out2[,6]),main="lp-ntPET with act",xlab=expression(t[P]))
+      abline(v=mean(out2[,6]))
+
+      plot(density(out2[,4]),main="lp-ntPET with act",xlab=expression(gamma))
+      abline(v=mean(out2[,4]))
+
+      plot(density(out2[,3]),main="lp-ntPET with act",xlab=expression(k[2][a]))
+      abline(v=mean(out2[,3]))
 
     } #intermediate plot
 
@@ -246,6 +241,63 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
   h2=quantile(errorM2, probs=0.05)
   # Select the values respecting the threshold
   out2=parMat_act[(errorM2<h2[1])==1,]
+
+  ### Saving the output
+
+  ### Posterior plots
+  if(PLOT==T){
+
+      pdf("posteriors_noactivation.pdf")
+      par(mfrow=c(2,2))
+      plot(density(out1[,1]),main=expression(R[1]), xlab=expression(R[1]))
+      abline(v=mean(out1[,1]))
+
+      plot(density(out1[,2]),main=expression(k[2]), xlab=expression(k[2]))
+      abline(v=mean(out1[,2]))
+
+      plot(density(out1[,3]),main=expression(k[2][a]), xlab=expression(k[2][a]))
+      abline(v=mean(out1[,3]))
+
+      dev.off()
+
+      pdf("posteriors_activation_explicit.pdf")
+      par(mfrow=c(2,2))
+      plot(density(out2[,1]),main=expression(R[1]), xlab=expression(R[1]))
+      abline(v=mean(out2[,1]))
+
+      plot(density(out2[,2]),main=expression(k[2]), xlab=expression(k[2]))
+      abline(v=mean(out2[,2]))
+
+      plot(density(out2[,3]),main=expression(k[2][a]), xlab=expression(k[2][a]))
+      abline(v=mean(out2[,3]))
+
+      plot(density(out2[,4]),main=expression(gamma), xlab=expression(gamma))
+      abline(v=mean(out2[,4]))
+
+      dev.off()
+
+      pdf("posteriors_activation_implicit.pdf")
+      par(mfrow=c(2,2))
+      plot(density(out2[,5]),main=expression(t[D]), xlab=expression(t[D]))
+      abline(v=mean(out2[,5]))
+
+      plot(density(out2[,6]),main=expression(t[P]), xlab=expression(t[P]))
+      abline(v=mean(out2[,6]))
+
+      plot(density(out2[,7]),main=expression(alpha), xlab=expression(alpha))
+      abline(v=mean(out2[,7]))
+
+      dev.off()
+  } # end of plots
+
+  ### Output: files
+    write(t(parMat_act), file="parMat_act.out", ncol=4)
+    write(t(Smat_act), file="SMat_act.out", ncol=60)
+    write(t(errorM2), file="error_act.out", ncol=3)
+
+    write(t(parMat_noact), file="parMat_noact.out", ncol=4)
+    write(t(Smat_noact), file="SMat_noact.out", ncol=60)
+    write(t(errorM1), file="error_noact.out", ncol=3)
 
   #modify returned values depending on the least square method used
   return(list(ABCout_act=parMat_act,Smat_act=Smat_act,ABCout_act_accepted=out2,error_act=errorM2,tol_act=h2,

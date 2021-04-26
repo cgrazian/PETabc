@@ -19,7 +19,7 @@ PETabc(
   b3 = 0.1,
   a4 = 0,
   b4 = 0.2,
-  PLOT = F
+  PLOT = T
 )
 }
 \arguments{
@@ -50,7 +50,7 @@ model, "two" performs the analysis for the two-tissue model. Default "single".}
 
 \item{b4}{Maximum of the uniform prior for K4. Default to 0.2 .}
 
-\item{PLOT}{If plots have to be produced. Default at FALSE.}
+\item{PLOT}{If plots have to be produced. Default at TRUE.}
 
 \item{inputfunction}{A function describing the input function. Default inputfunction().}
 }

@@ -50,41 +50,41 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
   parMat1 <- abc_out$ABCout_noact
   parMat2 <- abc_out$ABCout_act
 
-  parM1_min=parMat1[(error1==min(error1,na.rm=T))==1,]
-  parM2_min=parMat2[(error2==min(error2,na.rm=T))==1,]
-
   if(is.null(tol1)==T){
-    parM1 <- apply(abc_out$ABCout_noact_accepted,2,mean)
+    parM1_mean <- apply(abc_out$ABCout_noact_accepted,2,mean)
     parM1_mode <- apply(abc_out$ABCout_noact_accepted,2,mode_value)
+    parM1_median <- apply(abc_out$ABCout_noact_accepted,2,median)
   } else {
     out1=parMat1[(error1<tol1)==1,]
-    parM1 <- apply(out1,2,mean)
-    parM1_mode <- apply(out1,2,Mode)
+    parM1_mean <- apply(out1,2,mean)
+    parM1_mode <- apply(out1,2,mode_value)
+    parM1_median <- apply(out1,2,median)
   }
 
-    if(is.null(tol2)==T){
-    parM2 <- apply(abc_out$ABCout_act_accepted,2,mean)
+  if(is.null(tol2)==T){
+    parM2_mean <- apply(abc_out$ABCout_act_accepted,2,mean)
     parM2_mode <- apply(abc_out$ABCout_act_accepted,2,mode_value)
+    parM2_median <- apply(abc_out$ABCout_act_accepted,2,median)
   } else {
     out2=parMat2[(error2<tol2)==1,]
-    parM2 <- apply(out2,2,mean)
-    parM2_mode <- apply(out2,2,Mode)
+    parM2_mean <- apply(out2,2,mean)
+    parM2_mode <- apply(out2,2,mode_value)
+    parM2_median <- apply(out2,2,median)
   }
 
-#  hgrid=seq(0.05, 0.4, length=10)
   hgrid=seq(quantile(error1,prob=0.001),quantile(error1,prob=0.08),length=10)
   RMSE1=RMSE2=matrix(NA, nrow=1, ncol=length(hgrid))
   mprob1=mprob2=matrix(NA, ncol=length(hgrid), nrow=1)
 
   for (j in c(1:length(hgrid))) {
     ind=error1<hgrid[j]
-    RMSE1[1, j]=sqrt(mean((apply(parMat1[ind==1,], 2, mean)-parM1)^2))
+    RMSE1[1, j]=sqrt(mean((apply(parMat1[ind==1,], 2, mean)-parM1_mean)^2))
     mprob1[1, j]=sum(ind)
   }
 
   for (j in c(1:length(hgrid))) {
     ind=error2<hgrid[j]
-    RMSE2[1, j]=sqrt(mean((apply(parMat2[ind==1,], 2,mean)-parM2)^2))
+    RMSE2[1, j]=sqrt(mean((apply(parMat2[ind==1,], 2,mean)-parM2_mean)^2))
     mprob2[1, j]=sum(ind)
   }
   prob=mprob1/(mprob1+mprob2)
@@ -92,19 +92,27 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
   if(PLOT==T){
 
     pdf("modelprob_TAC.pdf")
-    data1sim=GenCurve(Ct, Cr, Ti, R1=parM1[1], K2=parM1[2], K2a=parM1[3], gamma=0, tD=parM2[5], tP=parM2[6], alpha=parM2[7])$M1
-    data2sim=GenCurve(Ct, Cr, Ti, R1=parM2[1], K2=parM2[2], K2a=parM2[3], gamma=parM2[4], tD=parM2[5], tP=parM2[6], alpha=parM2[7])$M2
-#    data1sim_mode=GenCurve(Ct, Cr, Ti, R1=parM1_mode[1], K2=parM1_mode[2], K2a=parM1_mode[3],
-#                           gamma=0, tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M1
-#    data2sim_mode=GenCurve(Ct, Cr, Ti, R1=parM2_mode[1], K2=parM2_mode[2], K2a=parM2_mode[3],
-#                           gamma=parM2_mode[4], tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M2
-    data1sim_min=GenCurve(Ct, Cr, Ti, R1=parM1_min[1], K2=parM1_min[2],
-                          K2a=parM1_min[3],gamma=0, tD=parM2_min[5],
-                          tP=parM2_min[6], alpha=parM2_min[7])$M1
-    data2sim_min=GenCurve(Ct, Cr, Ti, R1=parM2_min[1], K2=parM2_min[2],
-                          K2a=parM2_min[3],gamma=parM2_min[4],
-                          tD=parM2_min[5], tP=parM2_min[6],
-                          alpha=parM2_min[7])$M2
+    data1sim_mean=GenCurve(Ct, Cr, Ti, R1=parM1_mean[1], K2=parM1_mean[2],
+                      K2a=parM1_mean[3], gamma=0, tD=parM2_mean[5],
+                      tP=parM2_mean[6], alpha=parM2_mean[7])$M1
+    data2sim_mean=GenCurve(Ct, Cr, Ti, R1=parM2_mean[1], K2=parM2_mean[2], K2a=parM2_mean[3],
+                      gamma=parM2_mean[4], tD=parM2_mean[5], tP=parM2_mean[6],
+                      alpha=parM2_mean[7])$M2
+
+    data1sim_mode=GenCurve(Ct, Cr, Ti, R1=parM1_mode[1], K2=parM1_mode[2],
+                           K2a=parM1_mode[3],gamma=0, tD=parM2_mode[5],
+                           tP=parM2_mode[6], alpha=parM2_mode[7])$M1
+    data2sim_mode=GenCurve(Ct, Cr, Ti, R1=parM2_mode[1], K2=parM2_mode[2],
+                           K2a=parM2_mode[3],gamma=parM2_mode[4],
+                           tD=parM2_mode[5], tP=parM2_mode[6], alpha=parM2_mode[7])$M2
+
+    data1sim_median=GenCurve(Ct, Cr, Ti, R1=parM1_median[1], K2=parM1_median[2],
+                           K2a=parM1_median[3],gamma=0, tD=parM2_median[5],
+                           tP=parM2_median[6], alpha=parM2_median[7])$M1
+    data2sim_median=GenCurve(Ct, Cr, Ti, R1=parM2_median[1], K2=parM2_median[2],
+                           K2a=parM2_median[3],gamma=parM2_median[4],
+                           tD=parM2_median[5], tP=parM2_median[6], alpha=parM2_median[7])$M2
+
     data1sim_nnls=GenCurve(Ct, Cr, Ti, R1=parM1_nnls[1], K2=parM1_nnls[2],
                           K2a=parM1_nnls[3],gamma=0, tD=parM2_nnls[5],
                           tP=parM2_nnls[6], alpha=parM2_nnls[7])$M1
@@ -115,16 +123,14 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
 
     par(mfrow=c(1,1))
     plot(Ti, Ct, type="p", lwd=3, xlab="time", ylab="Observations",
-      ylim=c(0,max(data1sim,data2sim,Ct)),cex.lab=1, cex.axis=0.8)
+      ylim=c(0,max(data1sim_mean,data2sim_mean,Ct)),cex.lab=1, cex.axis=0.8)
     #time interval and sampling
-    lines(Ti, data1sim, lty=1, lwd=2, col=1)
-    lines(Ti, data2sim, lty=2, lwd=2, col=1)
-    lines(Ti, data1sim_min, lty=1, lwd=2, col=2)
-    lines(Ti, data2sim_min, lty=2, lwd=2, col=2)
+    lines(Ti, data1sim_median, lty=1, lwd=2, col=2)
+    lines(Ti, data2sim_median, lty=2, lwd=2, col=2)
     lines(Ti, data1sim_nnls, lty=1, lwd=2, col=3)
     lines(Ti, data2sim_nnls, lty=2, lwd=2, col=3)
-    legend("topright",c("no activ.-mean","activ.-mean","no activ.-min err",
-                        "activ.-min err","no activ.-nnls","activ.-nnls"),
+    legend("topright",c("no activ.-mean","activ.-mean","no activ.-median",
+                        "activ.-median","no activ.-nnls","activ.-nnls"),
            lty=c(1,2,1,2,1,2),
            col=c(1,1,2,2,3,3),lwd=2,cex=0.8)
     dev.off()
@@ -170,7 +176,8 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
 
     }
 
-    return(list(postProb=prob,RMSEnoact=RMSE1,RMSEact=RMSE2,parMnoact_mean=parM1,parMact_mean=parM2,
+    return(list(postProb=prob,RMSEnoact=RMSE1,RMSEact=RMSE2,
+                parMnoact_mean=parM1_mean,parMact_mean=parM2_mean,
                 parMnoact_mode=parM1_mode,parMact_mode=parM2_mode,
-                parMnoact_min=parM1_min,parMact_min=parM2_min))
+                parMnoact_min=parM1_median,parMact_min=parM2_median))
 }
