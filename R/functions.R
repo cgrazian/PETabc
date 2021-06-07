@@ -5,7 +5,7 @@
 #' emission tomography.
 #'
 #' @param t time
-  #' @param type type of the model. If type=1 is Model 1 in Feng et al. Type=2 represents Model 2 in Feng et al.
+#' @param type type of the model. If type=1 is Model 1 in Feng et al. Type=2 represents Model 2 in Feng et al.
 #' @return A vector of concentrations for each time point.
 #' @keywords BayesPET
 #' @export
@@ -412,3 +412,43 @@ TAC_2_Compartment=function(K1=0.0918, k2=0.4484, k3=0.0482, k4=0.1363,
   }
 
 }
+
+
+#' Function providing the arterial blood concentration measured during the scan for one-tissue compartmental model.
+#'
+#' This function outputs the arterial blood concentration of the tracer measured during the scan.
+#'
+#' @param t time
+#' @return A value representing Ca(t)
+#' @keywords BayesPET
+#' @export
+CrSolve=function(t) {
+  Ct = c(12, 1.8, 0.45)
+  bt = c(-4, -0.5, -0.008)
+  y=exp(bt[1]*t)* (Ct[1]*t - Ct[2] - Ct[3])+ Ct[2]*exp(bt[2]*t) + Ct[3]*exp(bt[3]*t)
+  return(y)
+}
+
+#' Function solving the differential equation for the one-tissue compartmental model
+#'
+#' This function solves the ordinary differential equation describing the net tracer flux
+#' into tissue.
+#'
+#' @param tspan vector with the times
+#' @param K1 constant for the flux from the blood to the tissue.
+#' @param k2 constant for the flux from the tissue to the blood.
+#' @return A value representing the estimated C(t)
+#' @keywords BayesPET
+#' @export
+oneTissueTAC=function(tspan, K1, k2) {
+  Cthat=c()
+  n <- length(tspan)
+  for (i in 1:n) {
+    tt=tspan[i]
+    tau=seq(0,tt, length=200)
+    difftau=mean(diff(tau))
+    Cthat[i]=K1*( sum(CrSolve(tau)*exp(-k2*(tt-tau))*difftau))
+  }
+  return(Cthat)
+}
+

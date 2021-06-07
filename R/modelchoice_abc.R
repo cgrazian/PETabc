@@ -10,10 +10,12 @@
 #' single-tissue compartment model
 #' @param abc_two output of the PETabc() function for the two-tissue
 #' single-tissue compartment model
-#' @param tol1 tolerance level for the single-tissue model.
+#' @param tol1 tolerance level for the single-tissue model. The tolerance is given in terms
+#' of percentage of posterior values to keep.
 #' If tol1=NULL, the tolerance level automatically chosen by the PETabc()
 #' function will be used. Default NULL.
-#' @param tol2 tolerance level for the two-tissue model.
+#' @param tol2 tolerance level for the two-tissue model. The tolerance is given in terms
+#' of percentage of posterior values to keep.
 #' If tol2=NULL, the tolerance level automatically chosen by the PETabc()
 #' function will be used. Default NULL.
 #' @param inputfunction A function describing the input function.
@@ -42,18 +44,21 @@ MC_abc <- function(y,tspan,abc_single, abc_two,tol1=NULL,tol2=NULL,
   if(is.null(tol1)==T){
     parM1 <- apply(abc_single$ABCout_accepted,2,mean)
   } else {
-    out1=parMat1[(error1[,1]<tol1)==1,]
+    h1 = quantile(abc_single$ABCout,probs=tol1)
+    out1=parMat1[(error1[,1]<h1)==1,]
     parM1 <- apply(out1,2,mean)
   }
 
   if(is.null(tol2)==T){
     parM2 <- apply(abc_two$ABCout_accepted,2,mean)
   } else {
-    out2=parMat2[(error2[,1]<tol2)==1,]
+    h2 = quantile(abc_two$ABCout,probs=tol2)
+    out2=parMat2[(error2[,1]<h2)==1,]
     parM2 <- apply(out2,2,mean)
   }
 
-  hgrid=seq(0.05, 0.4, length=10)
+  lprob_grid <- seq(log(0.001),log(0.08),length=20)
+  hgrid=quantile(error1,prob=exp(lprob_grid))
   RMSE1=RMSE2=matrix(NA, nrow=1, ncol=length(hgrid))
   mprob1=mprob2=matrix(NA, ncol=length(hgrid), nrow=1)
 
@@ -118,26 +123,29 @@ MC_abc <- function(y,tspan,abc_single, abc_two,tol1=NULL,tol2=NULL,
 
     pdf("modelprobWW_M1.pdf")
       par(mfrow=c(1,1))
-      plot(hgrid, prob[1,], type="l", lwd=3, col=1, lty=1,
+      plot(exp(lprob_grid), prob[1,], type="l", lwd=3, col=1, lty=1,
          xlab="tolerance", ylab="model prob", ylim=c(0,1),
          cex.lab=1.6,cex.axis=0.8)
       indgrid1=which(RMSE1[1,]==min(RMSE1[1,], na.rm=T))
       indgrid2=which(RMSE2[1,]==min(RMSE2[1,], na.rm=T))
-      hh=(hgrid[indgrid1]+ hgrid[indgrid2])/2
+      hh=(exp(lprob_grid)[indgrid1]+ exp(lprob_grid)[indgrid2])/2
       abline(v=hh)
     dev.off()
 
     pdf("modelprobWW_RMSE.pdf") #WW=1
       par(mfrow=c(1,1))
-      plot(hgrid, RMSE1[1,], type="l", lty=1, lwd=3, col=1, xlab="tolerance",
+      plot(exp(lprob_grid), RMSE1[1,], type="l", lty=1, lwd=3, col=1, xlab="tolerance",
          ylab="RMSE", cex.lab=1.6, cex.axis=0.8)
-      lines(hgrid, RMSE2[1,], lty=2, lwd=3, col=1)
+      lines(exp(lprob_grid), RMSE2[1,], lty=2, lwd=3, col=1)
       indgrid1=which(RMSE1[1,]==min(RMSE1[1,], na.rm=T))
       #half way betwwen the two minimums
       indgrid2=which(RMSE2[1, ]==min(RMSE2[1, ], na.rm=T))
-      hh=(hgrid[indgrid1]+ hgrid[indgrid2])/2
+      hh=(exp(lprob_grid)[indgrid1]+ exp(lprob_grid)[indgrid2])/2
       abline(v=hh)
     dev.off()
   }
-  return(list(postProb=prob,RMSEsingle=RMSE1,RMSEtwo=RMSE2))
+  hdf <- data.frame(perc=paste(round(as.numeric(exp(lprob_grid))*100,2) , "%" ),
+                    err=round(as.numeric(hgrid,3)) )
+
+  return(list(postProb=prob,RMSEsingle=RMSE1,RMSEtwo=RMSE2,err_grid=hdf))
 }

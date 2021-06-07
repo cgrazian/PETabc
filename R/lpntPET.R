@@ -261,7 +261,7 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
       dev.off()
 
       pdf("posteriors_activation_explicit.pdf")
-      par(mfrow=c(2,2))
+      par(mfrow=c(2,2), mar=c(1,1,1,1))
       plot(density(out2[,1]),main=expression(R[1]), xlab=expression(R[1]))
       abline(v=mean(out2[,1]))
 
