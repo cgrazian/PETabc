@@ -22,6 +22,8 @@ lp_ntPETabc(
   tP.b = 40,
   alpha.a = 0,
   alpha.b = 3,
+  k2a_per = 100,
+  k2a_int = c(0.25, 0.75),
   lsq = 1,
   PLOT = T
 )
@@ -59,6 +61,10 @@ lp_ntPETabc(
 
 \item{alpha.b}{upper bound of the uniform prior distribution for alpha. Default at 3.}
 
+\item{k2a_per}{baseline value for k2a (in percentage). Default value at 100.}
+
+\item{k2a_int}{levels of the credible intervals for k2a(t). Default value at (0.25,0.75).}
+
 \item{lsq}{type of least squares estimation: 1 for non-negative least squares, 2 for weighted non-negative least squares. Default at 1.}
 
 \item{PLOT}{If plots have to be produced. Default at TRUE.}
@@ -68,7 +74,7 @@ ABCout_act a matrix with values simulated from the posterior distribution of the
 
 Smat_act a matrix with values of summary statistics of the simulated curves for the model with activation.
 
-ABCout_accepted_act a matrix with values simulated from the posterior distribution of the parameters
+ABCout_act_accepted a matrix with values simulated from the posterior distribution of the parameters
 of the model with activation; it shows only the values accepted according to the automatically selected threshold.
 
 error_act vector of computed squared differences among the observed and the simulated summary statistics for the model with activation.
@@ -79,12 +85,20 @@ ABCout_noact a matrix with values simulated from the posterior distribution of t
 
 Smat_noact a matrix with values of summary statistics of the simulated curves for the model with no activation.
 
-ABCout_accepted_noact a matrix with values simulated from the posterior distribution of the parameters
+ABCout_noact_accepted a matrix with values simulated from the posterior distribution of the parameters
 of the model with no activation; it shows only the values accepted according to the automatically selected threshold.
 
 error_noact vector of computed squared differences among the observed and the simulated summary statistics for the model with no activation.
 
 tol_noact automatically selected tolerance level for the model with no activation; this tolerance level is used to define the matrix ABCout_accepted.
+
+nnls_noa non-negative linear least square estimates of the parameter for the model with no activation
+
+nnls_a non-negative linear least square estimates of the parameter for the model with activation
+
+k2at_all k2a(t) function for the model with activation, matrix of S x T values (total number of simulations x number of time points)
+
+k2at_acc k2a(t) function for the model with activation only for the accepted values of the paramters, matrix of (tol*S) x T values (number of accepted simulations x number of time points)
 }
 \description{
 This function peforms ABC inference for the lp-nt model.

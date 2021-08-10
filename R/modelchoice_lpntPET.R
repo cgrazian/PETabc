@@ -77,18 +77,19 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
   }
 
   lprob_grid <- seq(log(0.001),log(0.08),length=20)
-  hgrid=quantile(error1,prob=exp(lprob_grid))
+  hgrid1=quantile(error1,prob=exp(lprob_grid))
+  hgrid2=quantile(error2,prob=exp(lprob_grid))
   RMSE1=RMSE2=matrix(NA, nrow=1, ncol=length(hgrid))
   mprob1=mprob2=matrix(NA, ncol=length(hgrid), nrow=1)
 
-  for (j in c(1:length(hgrid))) {
-    ind=error1<hgrid[j]
+  for (j in c(1:length(hgrid1))) {
+    ind=error1<hgrid1[j]
     RMSE1[1, j]=sqrt(mean((apply(parMat1[ind==1,], 2, mean)-parM1_mean)^2))
     mprob1[1, j]=sum(ind)
   }
 
-  for (j in c(1:length(hgrid))) {
-    ind=error2<hgrid[j]
+  for (j in c(1:length(hgrid2))) {
+    ind=error2<hgrid2[j]
     RMSE2[1, j]=sqrt(mean((apply(parMat2[ind==1,], 2,mean)-parM2_mean)^2))
     mprob2[1, j]=sum(ind)
   }
@@ -130,6 +131,8 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
     plot(Ti, Ct, type="p", lwd=3, xlab="time", ylab="Observations",
       ylim=c(0,max(data1sim_mean,data2sim_mean,Ct)),cex.lab=1, cex.axis=0.8)
     #time interval and sampling
+    lines(Ti, data1sim_mean, lty=1, lwd=2, col=1)
+    lines(Ti, data2sim_mean, lty=2, lwd=2, col=1)
     lines(Ti, data1sim_median, lty=1, lwd=2, col=2)
     lines(Ti, data2sim_median, lty=2, lwd=2, col=2)
     lines(Ti, data1sim_nnls, lty=1, lwd=2, col=3)

@@ -29,11 +29,13 @@ single-tissue compartment model}
 \item{abc_two}{output of the PETabc() function for the two-tissue
 single-tissue compartment model}
 
-\item{tol1}{tolerance level for the single-tissue model.
+\item{tol1}{tolerance level for the single-tissue model. The tolerance is given in terms
+of percentage of posterior values to keep.
 If tol1=NULL, the tolerance level automatically chosen by the PETabc()
 function will be used. Default NULL.}
 
-\item{tol2}{tolerance level for the two-tissue model.
+\item{tol2}{tolerance level for the two-tissue model. The tolerance is given in terms
+of percentage of posterior values to keep.
 If tol2=NULL, the tolerance level automatically chosen by the PETabc()
 function will be used. Default NULL.}
 

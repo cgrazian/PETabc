@@ -15,8 +15,14 @@ MC_abc_lpntPET(Ct, Cr, Ti, abc_out, tol1 = NULL, tol2 = NULL, PLOT = F)
 
 \item{abc_out}{output of the lp_ntPETabc() function for the lp-ntPET model (both with and without activation).}
 
-\item{tol1}{tolerance level for the lp-ntPET model with activation.
+\item{tol1}{tolerance level for the lp-ntPET model with no activation. The tolerance is given in terms
+of percentage of posterior values to keep.
 If tol1=NULL, the tolerance level automatically chosen by the lp_ntPETabc()
+function will be used. Default NULL.}
+
+\item{tol2}{tolerance level for the lp-ntPET model with activation. The tolerance is given in terms
+of percentage of posterior values to keep.
+If tol2=NULL, the tolerance level automatically chosen by the lp_ntPETabc()
 function will be used. Default NULL.}
 
 \item{PLOT}{If plots have to be produced. Default at FALSE.}
