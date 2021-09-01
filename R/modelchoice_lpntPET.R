@@ -76,22 +76,22 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
     parM2_median <- apply(out2,2,median)
   }
 
-  lprob_grid <- seq(log(0.001),log(0.08),length=20)
+  lprob_grid <- seq(log(0.00001),log(0.05),length=20)
   hgrid1=quantile(error1,prob=exp(lprob_grid))
   hgrid2=quantile(error2,prob=exp(lprob_grid))
-  RMSE1=RMSE2=matrix(NA, nrow=1, ncol=length(hgrid))
-  mprob1=mprob2=matrix(NA, ncol=length(hgrid), nrow=1)
+  RMSE1=RMSE2=matrix(NA, nrow=1, ncol=length(lprob_grid))
+  mprob1=mprob2=matrix(NA, ncol=length(lprob_grid), nrow=1)
 
   for (j in c(1:length(hgrid1))) {
     ind=error1<hgrid1[j]
     RMSE1[1, j]=sqrt(mean((apply(parMat1[ind==1,], 2, mean)-parM1_mean)^2))
-    mprob1[1, j]=sum(ind)
+    mprob1[1, j]=sum(error1 < min(hgrid1[j],hgrid2[j]))
   }
 
   for (j in c(1:length(hgrid2))) {
     ind=error2<hgrid2[j]
     RMSE2[1, j]=sqrt(mean((apply(parMat2[ind==1,], 2,mean)-parM2_mean)^2))
-    mprob2[1, j]=sum(ind)
+    mprob2[1, j]=sum(error2 < min(hgrid1[j],hgrid2[j]))
   }
   prob=mprob1/(mprob1+mprob2)
 
@@ -184,10 +184,13 @@ MC_abc_lpntPET <- function(Ct,Cr,Ti,abc_out,tol1=NULL,tol2=NULL,PLOT=F)
 
     }
 
-    hdf <- data.frame(perc=paste(round(as.numeric(exp(lprob_grid))*100,2) , "%" ),
-                        err=round(as.numeric(hgrid,3)) )
+    hdf1 <- data.frame(perc=paste(round(as.numeric(exp(lprob_grid))*100,2) , "%" ),
+                        err=round(as.numeric(hgrid1,3)) )
+    hdf2 <- data.frame(perc=paste(round(as.numeric(exp(lprob_grid))*100,2) , "%" ),
+                       err=round(as.numeric(hgrid2,3)) )
 
-    return(list(postProb=prob,RMSEnoact=RMSE1,RMSEact=RMSE2,err_grid=hdf,
+    return(list(postProb=prob,RMSEnoact=RMSE1,RMSEact=RMSE2,
+                err_noact=hdf1, err_act=hdf2,
                 parMnoact_mean=parM1_mean,parMact_mean=parM2_mean,
                 parMnoact_mode=parM1_mode,parMact_mode=parM2_mode,
                 parMnoact_med=parM1_median,parMact_med=parM2_median))

@@ -45,14 +45,14 @@ GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
   #Cr=TACtrueC
   #Ct=TACtrueS
   col1=Cr
-  #col2=cumsum(Cr)
-  col2=cumtrapz(Ti, Cr)
-  #col3=-cumsum(Ct)
-  col3=-cumtrapz(Ti, Ct)
+  col2=cumsum(Cr)
+  #col2=cumtrapz(Ti, Cr)
+  col3=-cumsum(Ct)
+  #col3=-cumtrapz(Ti, Ct)
   Ind=(Ti-tD)>0
   ht=pmax(0, (Ti-tD)/(tP-tD))^(alpha)*exp(alpha*(1- (Ti-tD)/(tP-tD)))*Ind
-  #col4=-cumsum(Ct*ht)
-  col4=-cumtrapz(Ti, Ct*ht)
+  col4=-cumsum(Ct*ht)
+  #col4=-cumtrapz(Ti, Ct*ht)
   #yy=smooth.spline(c(1:60), Ct, cv=T)$y
   #col4=-cumtrapz(Ti, yy*ht)
   #col4=smooth.spline(c(1:60), col4, cv=T)$y
@@ -117,7 +117,7 @@ GenCurve=function(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha){
 
 lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K2a.alpha=0.1,K2a.beta=0.4,
                         gamma.a=0,gamma.b=0.2,tD.a=15,tD.b=25,tP.b=40,alpha.a=0,alpha.b=3,
-                        k2a_per=100,k2a_int=c(0.25,0.75),
+                        k2a_per=100,k2a_int=c(0.25,0.75),h=0.05,
                         lsq=1, PLOT=T) {
   #### nnls - option 1
   # model with no activation: MRTM
@@ -215,6 +215,7 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
 
   for (iter in 1:S){
     # Simulation of the parameters from their prior distributions
+
     R1=runif(1, R1a, R1b)
     K2=runif(1, K2alpha, K2beta)
     K2a=runif(1, K2a.alpha, K2a.beta)
@@ -223,18 +224,20 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
     tP=runif(1, tD+1, tP.b)
     alpha=runif(1, alpha.a, alpha.b)
 
-    data_sim=GenCurve(Ct, Cr, Ti, R1, K2, K2a, gamma, tD, tP, alpha)
+    data_sim=GenCurve(Ct, Cr, Ti, R1, K2, K2a, gamma,
+                      tD, tP, alpha)
     Ssim1=data_sim$M1
     Ssim2=data_sim$M2
+    Smat_noact[iter,] <- smooth.spline(c(1:nT), Ssim1, df=15)$y
+#    Smat_act[iter,] <- smooth.spline(c(1:nT), Ssim2, df=15)$y
     Smat_act[iter,] <- Ssim2
-    Smat_noact[iter,] <- Ssim1
 
-    errorM1[iter]=sum(abs(Sobs-Ssim1))
-    errorM2[iter]=sum(abs(Sobs-Ssim2))
-    parMat_act[iter,] <- c(R1,K2,K2a,gamma,tD,tP,alpha)
+    errorM1[iter]=sum(abs(Sobs-Smat_noact[iter,]))
+    errorM2[iter]=sum(abs(Sobs-Smat_act[iter,]))
     parMat_noact[iter,] <- c(R1,K2,K2a)
+    parMat_act[iter,] <- c(R1,K2,K2a,gamma,tD,tP,alpha)
 
-    if(round(iter/10000)==iter/10000){
+    if(round(iter/100000)==iter/100000){
 
       cat(iter, "..\n")
 
@@ -251,19 +254,19 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
       par(mfrow=c(2,2),mar=c(4,3,4,3))
 
       plot(density(out2[,5]),main="lp-ntPET with act",xlab=expression(t[D]),
-           ylab="Density",main="")
+           ylab="Density")
       abline(v=mean(out2[,5]))
 
       plot(density(out2[,6]),main="lp-ntPET with act",xlab=expression(t[P]),
-           ylab="Density",main="")
+           ylab="Density")
       abline(v=mean(out2[,6]))
 
       plot(density(out2[,4]),main="lp-ntPET with act",xlab=expression(gamma),
-           ylab="Density",main="")
+           ylab="Density")
       abline(v=mean(out2[,4]))
 
       plot(density(out2[,3]),main="lp-ntPET with act",xlab=expression(k[2][a]),
-           ylab="Density",main="")
+           ylab="Density")
       abline(v=mean(out2[,3]))
 
     } #intermediate plot
@@ -271,14 +274,14 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
   }
 
   # Chosen threshold for no activation
-  h1=quantile(errorM1, probs=0.05)
+  h1=quantile(errorM1, probs=h)
   # Select the values respecting the threshold
-  out1=parMat_noact[(errorM1<h1[1])==1,]
+  out1=parMat_noact[(errorM1<h1[1]),]
 
   # Chosen threshold for activation
-  h2=quantile(errorM2, probs=0.05)
+  h2=quantile(errorM2, probs=h)
   # Select the values respecting the threshold
-  out2=parMat_act[(errorM2<h2[1])==1,]
+  out2=parMat_act[(errorM2<h2[1]),]
 
   # k2a(t) function - accepted values
   k2at_acc=matrix(0,nrow=length(Ti),ncol=nrow(out2))
@@ -384,8 +387,10 @@ lp_ntPETabc <- function(Ct,Cr,Ti,S=10^5,R1a=0.8,R1b=1.1,K2alpha=0.2,K2beta=0.6,K
     write(k2at_all, file="k2at.out",ncol=length(Ti))
 
   #modify returned values depending on the least square method used
-  return(list(ABCout_act=parMat_act,Smat_act=Smat_act,ABCout_act_accepted=out2,error_act=errorM2,tol_act=h2,
-              ABCout_noact=parMat_noact,Smat_noact=Smat_noact,ABCout_noact_accepted=out1,error_noact=errorM1,tol_noact=h1,
+  return(list(ABCout_act=parMat_act,ABCout_act_accepted=out2,
+              error_act=errorM2,tol_act=h2,
+              ABCout_noact=parMat_noact,ABCout_noact_accepted=out1,
+              error_noact=errorM1,tol_noact=h1,
               nnls_noa=obj_nnls_noa$x,nnls_a=obj_nnls_a,
               k2at_all=k2at_all,k2at_acc=k2at_acc) )
 }
@@ -412,7 +417,9 @@ lpntPET_tol <- function(obj,tol)
   upp_mat <- matrix(NA,ncol=7,nrow=p)
   for(i in 1:p){
     err_act_new <- quantile(obj$error_act,probs=tol[i])
+#    err_act_new <- quantile(obj$err_act,probs=tol[i])
     ABC_out_list[[i]] <- obj$ABCout_act[obj$error_act < err_act_new,]
+#    ABC_out_list[[i]] <- obj$ABCout_act[obj$err_act < err_act_new,]
     k2at_list[[i]] <- obj$k2at_all[,obj$error_act < err_act_new]
 
     names_list[i] <- paste("tol=",tol[i],sep="")
@@ -513,4 +520,5 @@ lpntPET_tol <- function(obj,tol)
   names(ABC_out_list) <- names_list
 
   return(list(ABC_post=ABC_out_list,k2at=k2at_list))
+#  return(list(ABC_post=ABC_out_list))
 }
